@@ -2,9 +2,8 @@
 -- Comprehensive testing for TIM3 development token
 
 describe("Mock USDA Process", function()
-    local json = require("json")
-    local process
-    local mockMsg
+    local json = require("cjson")
+    local mock_ao = require("test.mock_ao")
     
     -- Test utilities
     local function createMessage(from, action, tags)
@@ -16,32 +15,24 @@ describe("Mock USDA Process", function()
         }
     end
     
-    local function captureMessage()
-        local captured = {}
-        ao.send = function(message)
-            table.insert(captured, message)
-        end
-        return captured
-    end
-    
     before_each(function()
-        -- Reset process state for each test
-        package.loaded["process"] = nil
+        -- Reset mock AO environment
+        mock_ao.reset()
+        
+        -- Load the process (this will now work with mocked AO environment)
         dofile("src/process.lua")
         
-        -- Reset global state
-        Balances = {}
-        TotalSupply = 0
-        Locked = {}
+        -- Clear any messages from process initialization
+        mock_ao.clearSentMessages()
     end)
     
     describe("Process Info", function()
         it("should return correct process information", function()
-            local messages = captureMessage()
             local msg = createMessage("user1", "Info")
             
             Handlers.evaluate(msg, msg)
             
+            local messages = mock_ao.getSentMessages()
             assert.are.equal(1, #messages)
             assert.are.equal("Info-Response", messages[1].Action)
             
@@ -55,11 +46,11 @@ describe("Mock USDA Process", function()
     
     describe("Balance Operations", function()
         it("should return zero balance for new user", function()
-            local messages = captureMessage()
             local msg = createMessage("user1", "Balance")
             
             Handlers.evaluate(msg, msg)
             
+            local messages = mock_ao.getSentMessages()
             assert.are.equal(1, #messages)
             assert.are.equal("Balance-Response", messages[1].Action)
             

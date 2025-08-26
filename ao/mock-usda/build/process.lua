@@ -1,7 +1,7 @@
 -- Mock USDA Token Process for TIM3 Development
 -- This simulates the real USDA token functionality for testing
 
-local json = require("json")
+local json = require("cjson")
 
 -- Initialize process state
 Name = Name or "Mock USDA"
@@ -22,7 +22,11 @@ ProcessInfo = ProcessInfo or {
 
 -- Helper Functions
 local function formatAmount(amount)
-    return math.floor(amount * (10 ^ Denomination)) / (10 ^ Denomination)
+    if amount == math.floor(amount) then
+        return math.floor(amount)  -- Return integer if no decimal part
+    else
+        return math.floor(amount * (10 ^ Denomination)) / (10 ^ Denomination)
+    end
 end
 
 local function validateAmount(amount)
