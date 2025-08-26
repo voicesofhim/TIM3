@@ -1,0 +1,15 @@
+package = "mock-usda"
+version = "1.0.0"
+source = {
+    url = ".",
+    dir = "src"
+}
+build = {
+    type = "builtin",
+    modules = {
+        ["mock-usda"] = "src/process.lua"
+    }
+}
+dependencies = {
+    "json"
+}

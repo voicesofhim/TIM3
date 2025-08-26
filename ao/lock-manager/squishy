@@ -1,0 +1,15 @@
+package = "tim3-lock-manager"
+version = "1.0.0"
+source = {
+    url = ".",
+    dir = "src"
+}
+build = {
+    type = "builtin",
+    modules = {
+        ["tim3-lock-manager"] = "src/process.lua"
+    }
+}
+dependencies = {
+    "json"
+}

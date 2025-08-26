@@ -1,0 +1,15 @@
+package = "tim3-coordinator"
+version = "1.0.0"
+source = {
+    url = ".",
+    dir = "src"
+}
+build = {
+    type = "builtin",
+    modules = {
+        ["tim3-coordinator"] = "src/process.lua"
+    }
+}
+dependencies = {
+    "json"
+}

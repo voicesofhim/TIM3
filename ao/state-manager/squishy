@@ -1,0 +1,15 @@
+package = "tim3-state-manager"
+version = "1.0.0"
+source = {
+    url = ".",
+    dir = "src"
+}
+build = {
+    type = "builtin",
+    modules = {
+        ["tim3-state-manager"] = "src/process.lua"
+    }
+}
+dependencies = {
+    "json"
+}
