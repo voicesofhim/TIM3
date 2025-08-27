@@ -138,10 +138,18 @@ describe("TIM3 Lock Manager Process", function()
                 } 
             }
             Handlers.evaluate(lockMsg, lockMsg)
+            
+            -- Get the lockId from the pending response
+            local pendingMessages = mock_ao.getSentMessages()
+            assert.are.equal(2, #pendingMessages) -- Should have Mock USDA request + Pending response
+            assert.are.equal("LockCollateral-Pending", pendingMessages[2].Action)
+            
+            local pendingData = json.decode(pendingMessages[2].Data)
+            local lockId = pendingData.lockId
+            
             mock_ao.clearSentMessages()
             
             -- Simulate Mock USDA confirmation
-            local lockId = "user1-lock-1640995200-10"  -- Based on fixed time/random
             local confirmMsg = {
                 From = "mock-usda-123",
                 Tags = { Action = "Lock-Confirmed" },
