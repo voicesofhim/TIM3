@@ -14,8 +14,7 @@ SystemState = SystemState or {
     totalCollateral = 0,
     totalTIM3Supply = 0,
     globalCollateralRatio = 0,
-    targetCollateralRatio = 1.5,
-    liquidationThreshold = 1.2,
+    targetCollateralRatio = 1.0,
     activePositions = 0,
     systemHealthScore = 100
 }
@@ -38,15 +37,16 @@ Config = Config or {
     tokenManagerProcess = nil,
     updateFrequency = 60,  -- seconds
     riskThresholds = {
-        healthy = 1.8,     -- Above 180% collateralization
-        warning = 1.5,     -- 150-180% collateralization  
-        danger = 1.2,      -- 120-150% collateralization
-        liquidation = 1.1  -- Below 110% collateralization
+        healthy = 1.0,     -- At or above 100% backing
+        warning = 0.95,    -- 95-100% backing (minor variance)
+        danger = 0.90,     -- 90-95% backing (system stress)
+        critical = 0.85    -- Below 85% backing (system intervention needed)
     }
 }
 
 -- Helper Functions
 local function formatAmount(amount)
+    if not amount then return 0 end
     if amount == math.floor(amount) then
         return math.floor(amount)
     else
@@ -60,14 +60,16 @@ local function calculateHealthFactor(collateral, debt)
 end
 
 local function getRiskLevel(healthFactor)
-    if healthFactor >= Config.riskThresholds.healthy then
+    local thresholds = Config.riskThresholds
+    
+    if healthFactor >= thresholds.healthy then
         return "healthy"
-    elseif healthFactor >= Config.riskThresholds.warning then
+    elseif healthFactor >= thresholds.warning then
         return "warning"
-    elseif healthFactor >= Config.riskThresholds.danger then
+    elseif healthFactor >= thresholds.danger then
         return "danger"
     else
-        return "liquidation"
+        return "critical"
     end
 end
 
@@ -89,6 +91,10 @@ local function updateSystemMetrics()
     
     -- Analyze all user positions
     for user, position in pairs(UserPositions) do
+        -- Ensure position has valid values
+        position.collateral = position.collateral or 0
+        position.tim3Balance = position.tim3Balance or 0
+        
         if position.tim3Balance > 0 then
             positionCount = positionCount + 1
             local healthFactor = calculateHealthFactor(position.collateral, position.tim3Balance)
@@ -98,7 +104,7 @@ local function updateSystemMetrics()
             totalHealthFactor = totalHealthFactor + healthFactor
             
             -- Update risk counters
-            if position.riskLevel == "liquidation" then
+            if position.riskLevel == "critical" then
                 RiskMetrics.underCollateralizedPositions = RiskMetrics.underCollateralizedPositions + 1
             elseif position.riskLevel == "danger" or position.riskLevel == "warning" then
                 RiskMetrics.atRiskPositions = RiskMetrics.atRiskPositions + 1
@@ -222,7 +228,11 @@ Handlers.add(
             }
         end
         
+        -- Ensure position has valid numeric values
         local position = UserPositions[user]
+        position.collateral = position.collateral or 0
+        position.tim3Balance = position.tim3Balance or 0
+        
         local oldCollateral = position.collateral
         local oldTIM3 = position.tim3Balance
         
@@ -349,7 +359,7 @@ Handlers.add(
         
         -- Check for positions requiring liquidation
         for user, position in pairs(UserPositions) do
-            if position.tim3Balance > 0 and position.riskLevel == "liquidation" then
+            if position.tim3Balance > 0 and position.riskLevel == "critical" then
                 table.insert(alerts, {
                     user = user,
                     riskLevel = position.riskLevel,

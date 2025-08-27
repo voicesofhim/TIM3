@@ -14,8 +14,7 @@ SystemState = SystemState or {
     totalCollateral = 0,
     totalTIM3Supply = 0,
     globalCollateralRatio = 0,
-    targetCollateralRatio = 1.5,
-    liquidationThreshold = 1.2,
+    targetCollateralRatio = 1.0,
     activePositions = 0,
     systemHealthScore = 100
 }
@@ -38,15 +37,16 @@ Config = Config or {
     tokenManagerProcess = nil,
     updateFrequency = 60,  -- seconds
     riskThresholds = {
-        healthy = 1.8,     -- Above 180% collateralization
-        warning = 1.5,     -- 150-180% collateralization  
-        danger = 1.2,      -- 120-150% collateralization
-        liquidation = 1.1  -- Below 110% collateralization
+        healthy = 1.0,     -- At or above 100% backing
+        warning = 0.95,    -- 95-100% backing (minor variance)
+        danger = 0.90,     -- 90-95% backing (system stress)
+        critical = 0.85    -- Below 85% backing (system intervention needed)
     }
 }
 
 -- Helper Functions
 local function formatAmount(amount)
+    if not amount then return 0 end
     if amount == math.floor(amount) then
         return math.floor(amount)
     else
@@ -98,7 +98,7 @@ local function updateSystemMetrics()
             totalHealthFactor = totalHealthFactor + healthFactor
             
             -- Update risk counters
-            if position.riskLevel == "liquidation" then
+            if position.riskLevel == "critical" then
                 RiskMetrics.underCollateralizedPositions = RiskMetrics.underCollateralizedPositions + 1
             elseif position.riskLevel == "danger" or position.riskLevel == "warning" then
                 RiskMetrics.atRiskPositions = RiskMetrics.atRiskPositions + 1
@@ -349,7 +349,7 @@ Handlers.add(
         
         -- Check for positions requiring liquidation
         for user, position in pairs(UserPositions) do
-            if position.tim3Balance > 0 and position.riskLevel == "liquidation" then
+            if position.tim3Balance > 0 and position.riskLevel == "critical" then
                 table.insert(alerts, {
                     user = user,
                     riskLevel = position.riskLevel,

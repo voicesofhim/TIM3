@@ -74,7 +74,7 @@ describe("TIM3 State Manager Process", function()
                 Tags = { 
                     Action = "UpdatePosition",
                     User = "user1",
-                    Collateral = "1500",
+                    Collateral = "1000",
                     TIM3Balance = "1000",
                     Operation = "update"
                 } 
@@ -87,10 +87,10 @@ describe("TIM3 State Manager Process", function()
             
             local data = json.decode(messages[1].Data)
             assert.are.equal("user1", data.user)
-            assert.are.equal("1500", data.position.collateral)
+            assert.are.equal("1000", data.position.collateral)
             assert.are.equal("1000", data.position.tim3Balance)
-            assert.are.equal("1.5", data.position.healthFactor)
-            assert.are.equal("warning", data.position.riskLevel)
+            assert.are.equal("1", data.position.healthFactor)
+            assert.are.equal("healthy", data.position.riskLevel)
         end)
         
         it("should add to existing position", function()
@@ -144,12 +144,12 @@ describe("TIM3 State Manager Process", function()
         
         it("should calculate risk metrics with multiple positions", function()
             -- Set up multiple positions with different risk levels
-            UserPositions["user1"] = { collateral = 1800, tim3Balance = 1000 }  -- 1.8 - healthy
-            UserPositions["user2"] = { collateral = 1400, tim3Balance = 1000 }  -- 1.4 - warning
-            UserPositions["user3"] = { collateral = 1100, tim3Balance = 1000 }  -- 1.1 - danger
-            UserPositions["user4"] = { collateral = 1000, tim3Balance = 1000 }  -- 1.0 - liquidation
+            UserPositions["user1"] = { collateral = 1000, tim3Balance = 1000 }  -- 1.0 - healthy
+            UserPositions["user2"] = { collateral = 950, tim3Balance = 1000 }   -- 0.95 - warning  
+            UserPositions["user3"] = { collateral = 900, tim3Balance = 1000 }   -- 0.9 - danger
+            UserPositions["user4"] = { collateral = 800, tim3Balance = 1000 }   -- 0.8 - critical
             
-            SystemState.totalCollateral = 5300
+            SystemState.totalCollateral = 3650
             SystemState.totalTIM3Supply = 4000
             
             local msg = { From = "admin", Tags = { Action = "SystemHealth" } }
@@ -159,14 +159,14 @@ describe("TIM3 State Manager Process", function()
             assert.are.equal(1, #messages)
             
             local data = json.decode(messages[1].Data)
-            assert.are.equal("5300", data.systemState.totalCollateral)
+            assert.are.equal("3650", data.systemState.totalCollateral)
             assert.are.equal("4000", data.systemState.totalTIM3Supply)
-            assert.are.equal("1.325", data.systemState.globalCollateralRatio)
+            assert.are.equal("0.9125", data.systemState.globalCollateralRatio)
             assert.are.equal(4, data.systemState.activePositions)
             
-            assert.are.equal(2, data.riskMetrics.underCollateralizedPositions)  -- user3 (1.1), user4 (1.0) - both < 1.2
-            assert.are.equal(1, data.riskMetrics.atRiskPositions)               -- user2 (1.4) - warning level
-            assert.are.equal(1, data.riskMetrics.healthyPositions)              -- user1 (1.8) - healthy
+            assert.are.equal(1, data.riskMetrics.underCollateralizedPositions)  -- user4 (0.8) - critical
+            assert.are.equal(2, data.riskMetrics.atRiskPositions)               -- user2 (0.95) warning, user3 (0.9) danger
+            assert.are.equal(1, data.riskMetrics.healthyPositions)              -- user1 (1.0) - healthy
         end)
     end)
     
@@ -197,7 +197,7 @@ describe("TIM3 State Manager Process", function()
             Config.coordinatorProcess = "coordinator-123"
             
             -- Set up risky position
-            UserPositions["user1"] = { collateral = 1000, tim3Balance = 1000 }  -- 1.0 - liquidation level
+            UserPositions["user1"] = { collateral = 800, tim3Balance = 1000 }  -- 0.8 - critical level
             
             local msg = { From = "admin", Tags = { Action = "CheckRiskAlerts" } }
             Handlers.evaluate(msg, msg)

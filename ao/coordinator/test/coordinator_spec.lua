@@ -26,7 +26,7 @@ describe("TIM3 Coordinator Process", function()
             assert.are.equal("TIM3-COORD", data.ticker)
             assert.are.equal("1.0.0", data.version)
             assert.are.equal(true, data.systemActive)
-            assert.are.equal(1.5, data.collateralRatio)
+            assert.are.equal(1.0, data.collateralRatio)
         end)
         
         it("should handle configuration updates", function()
@@ -109,9 +109,9 @@ describe("TIM3 Coordinator Process", function()
         it("should return position for specific user", function()
             -- Set up a position
             UserPositions["user2"] = {
-                collateral = 1500,
+                collateral = 1000,
                 tim3Minted = 1000,
-                collateralRatio = 1.5,
+                collateralRatio = 1.0,
                 healthFactor = 1.0
             }
             
@@ -127,9 +127,9 @@ describe("TIM3 Coordinator Process", function()
             
             local data = json.decode(messages[1].Data)
             assert.are.equal("user2", data.user)
-            assert.are.equal(1500, data.position.collateral)
+            assert.are.equal(1000, data.position.collateral)
             assert.are.equal(1000, data.position.tim3Minted)
-            assert.are.equal(1.5, data.position.collateralRatio)
+            assert.are.equal(1.0, data.position.collateralRatio)
         end)
     end)
     
@@ -155,14 +155,14 @@ describe("TIM3 Coordinator Process", function()
             local data = json.decode(messages[1].Data)
             assert.are.equal("user1", data.user)
             assert.are.equal("100", data.tim3Minted)
-            assert.are.equal("150", data.collateralLocked)  -- 100 * 1.5 ratio
+            assert.are.equal("100", data.collateralLocked)  -- 100 * 1.5 ratio
             
             -- Check position was created
             local position = UserPositions["user1"]
             assert.is.not_nil(position)
-            assert.are.equal(150, position.collateral)
+            assert.are.equal(100, position.collateral)
             assert.are.equal(100, position.tim3Minted)
-            assert.are.equal(1.5, position.collateralRatio)
+            assert.are.equal(1.0, position.collateralRatio)
             assert.are.equal(1.0, position.healthFactor)
         end)
         
@@ -220,7 +220,7 @@ describe("TIM3 Coordinator Process", function()
             Handlers.evaluate(msg, msg)
             
             -- Check global state updated
-            assert.are.equal(initialCollateral + 300, Config.totalCollateral)  -- 200 * 1.5
+            assert.are.equal(initialCollateral + 200, Config.totalCollateral)  -- 200 * 1.0
             assert.are.equal(initialMinted + 200, Config.totalTIM3Minted)
         end)
     end)
@@ -230,12 +230,12 @@ describe("TIM3 Coordinator Process", function()
             Config.systemActive = true
             -- Set up user with existing position
             UserPositions["user1"] = {
-                collateral = 300,
+                collateral = 200,
                 tim3Minted = 200,
-                collateralRatio = 1.5,
+                collateralRatio = 1.0,
                 healthFactor = 1.0
             }
-            Config.totalCollateral = 300
+            Config.totalCollateral = 200
             Config.totalTIM3Minted = 200
         end)
         
@@ -254,13 +254,13 @@ describe("TIM3 Coordinator Process", function()
             local data = json.decode(messages[1].Data)
             assert.are.equal("user1", data.user)
             assert.are.equal("100", data.tim3Burned)
-            assert.are.equal("150", data.collateralReleased)  -- Half of 300
+            assert.are.equal("100", data.collateralReleased)  -- Half of 200
             
             -- Check position was updated
             local position = UserPositions["user1"]
-            assert.are.equal(150, position.collateral)
+            assert.are.equal(100, position.collateral)
             assert.are.equal(100, position.tim3Minted)
-            assert.are.equal(1.5, position.collateralRatio)
+            assert.are.equal(1.0, position.collateralRatio)
         end)
         
         it("should reject burning when system is inactive", function()
@@ -338,7 +338,7 @@ describe("TIM3 Coordinator Process", function()
             assert.are.equal("0", data.totalCollateral)
             assert.are.equal("0", data.totalTIM3Minted)
             assert.are.equal("0", data.globalCollateralRatio)
-            assert.are.equal("1.5", data.targetCollateralRatio)
+            assert.are.equal("1", data.targetCollateralRatio)
             assert.are.equal(0, data.userPositions)
         end)
         

@@ -52,11 +52,15 @@ local function validateAmount(amount)
     if not amount or type(amount) ~= "number" or amount <= 0 then
         return false, "Invalid amount"
     end
-    if amount < Config.minLockAmount then
-        return false, "Amount below minimum (" .. Config.minLockAmount .. ")"
+    
+    local minAmount = Config.minLockAmount or 10
+    local maxAmount = Config.maxLockAmount or 1000000
+    
+    if amount < minAmount then
+        return false, "Amount below minimum (" .. minAmount .. ")"
     end
-    if amount > Config.maxLockAmount then
-        return false, "Amount above maximum (" .. Config.maxLockAmount .. ")"
+    if amount > maxAmount then
+        return false, "Amount above maximum (" .. maxAmount .. ")"
     end
     return true, nil
 end

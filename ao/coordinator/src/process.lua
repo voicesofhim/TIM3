@@ -18,7 +18,7 @@ Config = Config or {
     tokenManagerProcess = nil,
     
     -- System parameters
-    collateralRatio = 1.5,  -- 150% collateralization ratio
+    collateralRatio = 1.0,  -- 1:1 USDA backing ratio
     minMintAmount = 10,     -- Minimum TIM3 mint amount
     maxMintAmount = 100000, -- Maximum TIM3 mint amount
     
@@ -219,7 +219,7 @@ Handlers.add(
         currentPosition.collateral = currentPosition.collateral + requiredCollateral
         currentPosition.tim3Minted = currentPosition.tim3Minted + tim3Amount
         currentPosition.collateralRatio = currentPosition.collateral / currentPosition.tim3Minted
-        currentPosition.healthFactor = currentPosition.collateralRatio / Config.collateralRatio
+        currentPosition.healthFactor = currentPosition.collateralRatio
         
         UserPositions[user] = currentPosition
         
