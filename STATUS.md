@@ -16,7 +16,7 @@
 - **1:1 USDA Backing Architecture** (100% complete)
 
 ### 🚧 **Current Focus**
-**Next Milestone**: Frontend Development & Integration
+**Next Milestone**: AO Network Deployment & Live Testing
 
 ---
 
@@ -46,11 +46,13 @@
 - [x] Comprehensive test suite (83 tests passing across 5 processes)
 
 ### **🟡 IN PROGRESS**
-- [ ] React frontend with Wander wallet integration
+- [ ] Deploy AO processes to live network
+- [ ] Configure process communication 
+- [ ] Test live system integration
 
 ### **⭕ PENDING**  
+- [ ] React frontend with Wander wallet integration
 - [ ] End-to-end integration testing
-- [ ] Production deployment to AO network
 - [ ] ArNS domain configuration
 
 ---
@@ -134,22 +136,34 @@ apps/tim3/
 
 ## 🎯 **Next Actions**
 
-### **Immediate (Next Session)**
-1. **Build TIM3 Coordinator Process**
-   - Main entry point for user interactions
-   - Orchestrates lock USDA → mint TIM3 flow
-   - Communicates with all specialist processes
+### **Phase 1: AO Network Deployment (Immediate Priority)**
+1. **Deploy All Processes to AO Network**
+   - Use `npm run ao:deploy` to deploy all 5 processes
+   - Get live process IDs for each component
+   - Verify deployment success
 
-### **Following Steps**  
-2. Build State Manager (collateral ratio tracking)
-3. Build Lock Manager (USDA collateral handling)
-4. Build Token Manager (TIM3 minting/burning)
-5. Integrate all processes with comprehensive testing
+2. **Configure Process Communication**
+   - Send configuration messages with process IDs
+   - Coordinator ← StateManager, LockManager, TokenManager, MockUSDA IDs
+   - Each process ← Coordinator ID for communication
+   - Test configuration with Info requests
 
-### **Future Phases**
-- Frontend development with Wander wallet
-- End-to-end testing and deployment
-- Production launch preparation
+3. **Live System Integration Testing**
+   - Test complete user flow on live network
+   - Verify 1:1 USDA backing works in production
+   - Validate all process communication
+   - Test error handling and edge cases
+
+### **Phase 2: Frontend Development**
+- React app with Wander wallet integration
+- Connect to live AO processes (not mocks)
+- User interface for TIM3 operations
+
+### **Phase 3: Production Launch**
+- Replace Mock USDA with real USDA token
+- End-to-end testing with real assets
+- ArNS domain configuration
+- Production monitoring setup
 
 ---
 
