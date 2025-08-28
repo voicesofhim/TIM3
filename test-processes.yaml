@@ -1,0 +1,5 @@
+processes:
+  - name: mock-usda-test
+    file: ao/mock-usda/build/process.lua
+    scheduler: _GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA
+    module: cNlipBptaF9JeFAf4wUmpi43EojNanIBos3EfNrEOWo

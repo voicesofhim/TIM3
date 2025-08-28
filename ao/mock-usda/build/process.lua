@@ -1,7 +1,8 @@
 -- Mock USDA Token Process for TIM3 Development
 -- This simulates the real USDA token functionality for testing
 
-local json = require("cjson")
+-- Use built-in json library (available in AO environment)
+-- local json = require("json") -- Not needed, json is global
 
 -- Initialize process state
 Name = Name or "Mock USDA"
@@ -265,7 +266,8 @@ Handlers.add(
                 Data = json.encode({
                     user = user,
                     amount = tostring(formatAmount(amount)),
-                    lockId = user .. "-" .. tostring(os.time())
+                    lockId = msg.Tags.LockId or (user .. "-" .. tostring(os.time())),
+                    purpose = msg.Tags.Purpose  -- Include original purpose for validation
                 })
             })
         end

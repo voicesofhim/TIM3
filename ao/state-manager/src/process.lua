@@ -2,7 +2,7 @@
 -- Tracks collateral ratios, system health, and risk management
 -- Maintains global system state and user position tracking
 
-local json = require("cjson")
+-- JSON is available globally in AO environment
 
 -- Initialize process state
 Name = Name or "TIM3 State Manager"

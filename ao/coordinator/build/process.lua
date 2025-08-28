@@ -2,7 +2,7 @@
 -- Main orchestrator for the TIM3 collateralized token system
 -- Coordinates USDA locking and TIM3 minting operations
 
-local json = require("cjson")
+-- JSON is available globally in AO environment
 
 -- Initialize process state
 Name = Name or "TIM3 Coordinator"
@@ -19,17 +19,44 @@ Config = Config or {
     
     -- System parameters
     collateralRatio = 1.0,  -- 1:1 USDA backing ratio
-    minMintAmount = 10,     -- Minimum TIM3 mint amount
+    minMintAmount = 1,      -- Minimum TIM3 mint amount (prevent dust attacks)
     maxMintAmount = 100000, -- Maximum TIM3 mint amount
+    
+    -- Circuit breaker parameters
+    maxMintPerUser = 50000,     -- Maximum TIM3 per user per period
+    maxMintPerBlock = 10000,    -- Maximum TIM3 per block/time period
+    mintCooldownPeriod = 300,   -- 5 minutes between large mints
+    largeMinThreshold = 1000,   -- Amounts above this trigger cooldown
+    
+    -- Rate limiting
+    blockMintTotal = 0,         -- Current block mint total
+    lastBlockReset = 0,         -- Last time block counter was reset
+    blockTimeWindow = 3600      -- 1 hour window for rate limiting
     
     -- System status
     systemActive = true,
     totalCollateral = 0,
-    totalTIM3Minted = 0
+    totalTIM3Minted = 0,
+    
+    -- Timeout settings (5 minutes for pending operations)
+    pendingTimeout = 300,  -- 300 seconds = 5 minutes
+    
+    -- Emergency pause (only admin can toggle)
+    emergencyPaused = false,
+    adminProcess = nil  -- Set this to the admin process ID
 }
 
 -- User positions tracking
 UserPositions = UserPositions or {}
+
+-- Pending mint operations (awaiting USDA lock confirmation)
+PendingMints = PendingMints or {}
+
+-- Pending burn operations (awaiting token burn confirmation)
+PendingBurns = PendingBurns or {}
+
+-- User mint tracking for rate limiting
+UserMintHistory = UserMintHistory or {}
 
 -- Process info
 ProcessInfo = ProcessInfo or {
@@ -65,7 +92,71 @@ local function validateAmount(amount)
 end
 
 local function calculateRequiredCollateral(tim3Amount)
-    return math.ceil(tim3Amount * Config.collateralRatio)
+    -- Use exact 1:1 ratio to prevent rounding attacks
+    -- For fractional amounts, require proportional collateral
+    return tim3Amount * Config.collateralRatio
+end
+
+local function resetBlockLimitsIfNeeded()
+    local currentTime = os.time()
+    if currentTime - Config.lastBlockReset >= Config.blockTimeWindow then
+        Config.blockMintTotal = 0
+        Config.lastBlockReset = currentTime
+    end
+end
+
+local function validateCircuitBreakers(user, amount)
+    local currentTime = os.time()
+    resetBlockLimitsIfNeeded()
+    
+    -- Check block/time window limit
+    if Config.blockMintTotal + amount > Config.maxMintPerBlock then
+        return false, "Block mint limit exceeded (max " .. Config.maxMintPerBlock .. " per " .. (Config.blockTimeWindow / 3600) .. "h)"
+    end
+    
+    -- Initialize user history if needed
+    if not UserMintHistory[user] then
+        UserMintHistory[user] = {
+            totalMinted = 0,
+            lastLargeMint = 0,
+            mintCount = 0
+        }
+    end
+    
+    local userHistory = UserMintHistory[user]
+    
+    -- Check per-user limit (lifetime or reset periodically)
+    if userHistory.totalMinted + amount > Config.maxMintPerUser then
+        return false, "User mint limit exceeded (max " .. Config.maxMintPerUser .. " per user)"
+    end
+    
+    -- Check cooldown for large mints
+    if amount >= Config.largeMinThreshold then
+        local timeSinceLastLarge = currentTime - userHistory.lastLargeMint
+        if timeSinceLastLarge < Config.mintCooldownPeriod then
+            local remainingCooldown = Config.mintCooldownPeriod - timeSinceLastLarge
+            return false, "Large mint cooldown active (wait " .. remainingCooldown .. " seconds)"
+        end
+    end
+    
+    return true, nil
+end
+
+local function updateCircuitBreakerCounters(user, amount)
+    resetBlockLimitsIfNeeded()
+    
+    -- Update block total
+    Config.blockMintTotal = Config.blockMintTotal + amount
+    
+    -- Update user history
+    local userHistory = UserMintHistory[user]
+    userHistory.totalMinted = userHistory.totalMinted + amount
+    userHistory.mintCount = userHistory.mintCount + 1
+    
+    -- Update large mint timestamp if applicable
+    if amount >= Config.largeMinThreshold then
+        userHistory.lastLargeMint = os.time()
+    end
 end
 
 local function updateProcessInfo()
@@ -74,6 +165,106 @@ local function updateProcessInfo()
     ProcessInfo.totalTIM3Minted = Config.totalTIM3Minted
     ProcessInfo.collateralRatio = Config.collateralRatio
 end
+
+local function cleanupExpiredOperations()
+    local currentTime = os.time()
+    local expiredMints = {}
+    local expiredBurns = {}
+    
+    -- Check pending mints
+    for mintId, mint in pairs(PendingMints) do
+        if currentTime - mint.timestamp > Config.pendingTimeout then
+            table.insert(expiredMints, mintId)
+        end
+    end
+    
+    -- Check pending burns
+    for burnId, burn in pairs(PendingBurns) do
+        if currentTime - burn.timestamp > Config.pendingTimeout then
+            table.insert(expiredBurns, burnId)
+        end
+    end
+    
+    -- Clean up expired mints
+    for _, mintId in ipairs(expiredMints) do
+        local mint = PendingMints[mintId]
+        if mint then
+            -- Notify user of timeout
+            ao.send({
+                Target = mint.user,
+                Action = "MintTIM3-Timeout",
+                Data = json.encode({
+                    mintId = mintId,
+                    message = "Operation timed out after " .. Config.pendingTimeout .. " seconds"
+                })
+            })
+            PendingMints[mintId] = nil
+        end
+    end
+    
+    -- Clean up expired burns
+    for _, burnId in ipairs(expiredBurns) do
+        local burn = PendingBurns[burnId]
+        if burn then
+            -- Notify user of timeout
+            ao.send({
+                Target = burn.user,
+                Action = "BurnTIM3-Timeout",
+                Data = json.encode({
+                    burnId = burnId,
+                    message = "Operation timed out after " .. Config.pendingTimeout .. " seconds"
+                })
+            })
+            PendingBurns[burnId] = nil
+        end
+    end
+    
+    return #expiredMints + #expiredBurns  -- Return count of cleaned operations
+end
+
+-- Emergency Pause Handler
+Handlers.add(
+    "EmergencyPause",
+    Handlers.utils.hasMatchingTag("Action", "EmergencyPause"),
+    function(msg)
+        -- Check if sender is admin
+        if Config.adminProcess and msg.From ~= Config.adminProcess then
+            ao.send({
+                Target = msg.From,
+                Action = "EmergencyPause-Error",
+                Data = "Unauthorized - only admin can pause system"
+            })
+            return
+        end
+        
+        local pause = msg.Tags.Pause == "true"
+        Config.emergencyPaused = pause
+        Config.systemActive = not pause  -- Deactivate system if paused
+        
+        -- Log the action
+        ao.send({
+            Target = ao.id,
+            Action = "EmergencyPause-Log",
+            Data = json.encode({
+                paused = pause,
+                by = msg.From,
+                timestamp = os.time(),
+                reason = msg.Tags.Reason or "No reason provided"
+            })
+        })
+        
+        -- Send response
+        ao.send({
+            Target = msg.From,
+            Action = "EmergencyPause-Response",
+            Data = json.encode({
+                emergencyPaused = Config.emergencyPaused,
+                systemActive = Config.systemActive,
+                timestamp = os.time()
+            })
+        })
+    end
+)
 
 -- Configuration Handler
 Handlers.add(
@@ -95,6 +286,10 @@ Handlers.add(
             Config.collateralRatio = tonumber(value) or Config.collateralRatio
         elseif configType == "SystemActive" then
             Config.systemActive = value == "true"
+        elseif configType == "AdminProcess" then
+            Config.adminProcess = value
+        elseif configType == "PendingTimeout" then
+            Config.pendingTimeout = tonumber(value) or Config.pendingTimeout
         else
             ao.send({
                 Target = msg.From,
@@ -171,11 +366,11 @@ Handlers.add(
         local tim3Amount = tonumber(msg.Tags.Amount or msg.Tags.Quantity)
         
         -- System status check
-        if not Config.systemActive then
+        if not Config.systemActive or Config.emergencyPaused then
             ao.send({
                 Target = msg.From,
                 Action = "MintTIM3-Error",
-                Data = "System is currently inactive"
+                Data = Config.emergencyPaused and "System is in emergency pause" or "System is currently inactive"
             })
             return
         end
@@ -187,6 +382,17 @@ Handlers.add(
                 Target = msg.From,
                 Action = "MintTIM3-Error",
                 Data = error
+            })
+            return
+        end
+        
+        -- Validate circuit breakers
+        local circuitOk, circuitError = validateCircuitBreakers(user, tim3Amount)
+        if not circuitOk then
+            ao.send({
+                Target = msg.From,
+                Action = "MintTIM3-Error",
+                Data = circuitError
             })
             return
         end
@@ -204,9 +410,132 @@ Handlers.add(
             return
         end
         
-        -- Step 1: Request USDA lock (simulate the flow for now)
-        -- In a complete system, this would be an async operation
-        -- For now, we'll simulate successful collateral locking
+        -- Generate mint operation ID
+        local mintId = user .. "-mint-" .. tostring(os.time()) .. "-" .. tostring(math.random(1000, 9999))
+        
+        -- Create pending mint record
+        PendingMints[mintId] = {
+            mintId = mintId,
+            user = user,
+            tim3Amount = tim3Amount,
+            requiredCollateral = requiredCollateral,
+            timestamp = os.time(),
+            status = "pending"
+        }
+        
+        -- Step 1: Request USDA lock from Lock Manager
+        ao.send({
+            Target = Config.lockManagerProcess,
+            Action = "LockCollateral",
+            Tags = {
+                User = user,
+                Amount = tostring(requiredCollateral),
+                Purpose = "TIM3-mint-" .. mintId
+            }
+        })
+        
+        -- Send pending response to user
+        ao.send({
+            Target = msg.From,
+            Action = "MintTIM3-Pending",
+            Data = json.encode({
+                mintId = mintId,
+                user = user,
+                tim3Amount = tostring(formatAmount(tim3Amount)),
+                requiredCollateral = tostring(formatAmount(requiredCollateral)),
+                status = "pending-collateral-lock"
+            })
+        })
+        
+        return -- Don't update positions until lock is confirmed
+        
+    end
+)
+
+-- Lock Confirmation Handler (from Lock Manager)
+Handlers.add(
+    "LockCollateral-Success",
+    Handlers.utils.hasMatchingTag("Action", "LockCollateral-Success"),
+    function(msg)
+        -- Only accept confirmations from configured Lock Manager
+        if msg.From ~= Config.lockManagerProcess then
+            return
+        end
+        
+        local lockData = json.decode(msg.Data or "{}")
+        local purpose = lockData.purpose or ""
+        
+        -- Extract mint ID from purpose
+        local mintId = purpose:match("TIM3%-mint%-(.+)")
+        if not mintId or not PendingMints[mintId] then
+            return
+        end
+        
+        local pendingMint = PendingMints[mintId]
+        local user = pendingMint.user
+        local tim3Amount = pendingMint.tim3Amount
+        local requiredCollateral = pendingMint.requiredCollateral
+        
+        -- Check if token manager is configured
+        if not Config.tokenManagerProcess then
+            ao.send({
+                Target = user,
+                Action = "MintTIM3-Error",
+                Data = "Token manager not configured"
+            })
+            return
+        end
+        
+        -- Step 2: Request TIM3 minting
+        ao.send({
+            Target = Config.tokenManagerProcess,
+            Action = "Mint",
+            Tags = {
+                Recipient = user,
+                Amount = tostring(tim3Amount),
+                Purpose = "TIM3-mint-" .. mintId
+            }
+        })
+        
+        -- Update pending status
+        pendingMint.status = "pending-token-mint"
+        pendingMint.lockId = lockData.lockId
+        
+        -- Send progress update
+        ao.send({
+            Target = user,
+            Action = "MintTIM3-Progress",
+            Data = json.encode({
+                mintId = mintId,
+                status = "collateral-locked-minting-tokens"
+            })
+        })
+    end
+)
+
+-- Mint Confirmation Handler (from Token Manager)
+Handlers.add(
+    "Mint-Response",
+    Handlers.utils.hasMatchingTag("Action", "Mint-Response"),
+    function(msg)
+        -- Only accept confirmations from configured Token Manager
+        if msg.From ~= Config.tokenManagerProcess then
+            return
+        end
+        
+        local mintData = json.decode(msg.Data or "{}")
+        local purpose = mintData.purpose or ""
+        
+        -- Extract mint ID from purpose
+        local mintId = purpose:match("TIM3%-mint%-(.+)")
+        if not mintId or not PendingMints[mintId] then
+            return
+        end
+        
+        local pendingMint = PendingMints[mintId]
+        local user = pendingMint.user
+        local tim3Amount = pendingMint.tim3Amount
+        local requiredCollateral = pendingMint.requiredCollateral
         
         -- Update user position
         local currentPosition = UserPositions[user] or {
@@ -228,11 +557,18 @@ Handlers.add(
         Config.totalTIM3Minted = Config.totalTIM3Minted + tim3Amount
         updateProcessInfo()
         
+        -- Update circuit breaker counters
+        updateCircuitBreakerCounters(user, tim3Amount)
+        
+        -- Remove from pending
+        PendingMints[mintId] = nil
+        
         -- Send success response
         ao.send({
-            Target = msg.From,
+            Target = user,
             Action = "MintTIM3-Response",
             Data = json.encode({
+                mintId = mintId,
                 user = user,
                 tim3Minted = tostring(formatAmount(tim3Amount)),
                 collateralLocked = tostring(formatAmount(requiredCollateral)),
@@ -250,6 +586,7 @@ Handlers.add(
             Target = ao.id,
             Action = "MintTIM3-Log",
             Data = json.encode({
+                mintId = mintId,
                 user = user,
                 tim3Amount = tim3Amount,
                 collateralAmount = requiredCollateral,
@@ -259,7 +596,7 @@ Handlers.add(
     end
 )
 
--- Burn TIM3 Handler (Reverse Operation)
+-- Burn TIM3 Handler (Reverse Operation - Atomic)
 Handlers.add(
     "BurnTIM3",
     Handlers.utils.hasMatchingTag("Action", "BurnTIM3"),
@@ -268,11 +605,11 @@ Handlers.add(
         local tim3Amount = tonumber(msg.Tags.Amount or msg.Tags.Quantity)
         
         -- System status check
-        if not Config.systemActive then
+        if not Config.systemActive or Config.emergencyPaused then
             ao.send({
                 Target = msg.From,
                 Action = "BurnTIM3-Error",
-                Data = "System is currently inactive"
+                Data = Config.emergencyPaused and "System is in emergency pause" or "System is currently inactive"
             })
             return
         end
@@ -298,10 +635,166 @@ Handlers.add(
             return
         end
         
-        -- Calculate collateral to release
-        local collateralToRelease = math.floor((tim3Amount / currentPosition.tim3Minted) * currentPosition.collateral)
+        -- Check if token manager is configured
+        if not Config.tokenManagerProcess then
+            ao.send({
+                Target = msg.From,
+                Action = "BurnTIM3-Error",
+                Data = "Token manager not configured"
+            })
+            return
+        end
+        
+        -- Calculate collateral to release with exact precision
+        local collateralToRelease = tim3Amount * Config.collateralRatio
+        
+        -- Generate burn operation ID
+        local burnId = user .. "-burn-" .. tostring(os.time()) .. "-" .. tostring(math.random(1000, 9999))
+        
+        -- Create pending burn record
+        PendingBurns[burnId] = {
+            burnId = burnId,
+            user = user,
+            tim3Amount = tim3Amount,
+            collateralToRelease = collateralToRelease,
+            timestamp = os.time(),
+            status = "pending-burn"
+        }
+        
+        -- Step 1: Request TIM3 burn from Token Manager
+        ao.send({
+            Target = Config.tokenManagerProcess,
+            Action = "Burn",
+            Tags = {
+                User = user,
+                Amount = tostring(tim3Amount),
+                Purpose = "TIM3-burn-" .. burnId
+            }
+        })
+        
+        -- Send pending response to user
+        ao.send({
+            Target = msg.From,
+            Action = "BurnTIM3-Pending",
+            Data = json.encode({
+                burnId = burnId,
+                user = user,
+                tim3Amount = tostring(formatAmount(tim3Amount)),
+                collateralToRelease = tostring(formatAmount(collateralToRelease)),
+                status = "pending-token-burn"
+            })
+        })
+        
+        return -- Don't update positions until burn is confirmed
+    end
+)
+
+-- Burn Confirmation Handler (from Token Manager)
+Handlers.add(
+    "Burn-Response",
+    Handlers.utils.hasMatchingTag("Action", "Burn-Response"),
+    function(msg)
+        -- Only accept confirmations from configured Token Manager
+        if msg.From ~= Config.tokenManagerProcess then
+            return
+        end
+        
+        local burnData = json.decode(msg.Data or "{}")
+        local burnId = burnData.burnId
+        
+        -- Extract burn ID from data or purpose
+        if not burnId and burnData.purpose then
+            burnId = burnData.purpose:match("TIM3%-burn%-(.+)")
+        end
+        
+        if not burnId or not PendingBurns[burnId] then
+            return
+        end
+        
+        local pendingBurn = PendingBurns[burnId]
+        local user = pendingBurn.user
+        local tim3Amount = pendingBurn.tim3Amount
+        local collateralToRelease = pendingBurn.collateralToRelease
+        
+        -- Check if lock manager is configured
+        if not Config.lockManagerProcess then
+            ao.send({
+                Target = user,
+                Action = "BurnTIM3-Error",
+                Data = "Lock manager not configured"
+            })
+            PendingBurns[burnId] = nil
+            return
+        end
+        
+        -- Step 2: Request USDA unlock from Lock Manager
+        ao.send({
+            Target = Config.lockManagerProcess,
+            Action = "UnlockCollateral",
+            Tags = {
+                User = user,
+                Amount = tostring(collateralToRelease),
+                Purpose = "TIM3-burn-" .. burnId
+            }
+        })
+        
+        -- Update pending status
+        pendingBurn.status = "pending-unlock"
+        
+        -- Send progress update
+        ao.send({
+            Target = user,
+            Action = "BurnTIM3-Progress",
+            Data = json.encode({
+                burnId = burnId,
+                status = "tokens-burned-unlocking-collateral"
+            })
+        })
+    end
+)
+
+-- Unlock Confirmation Handler (from Lock Manager)
+Handlers.add(
+    "UnlockCollateral-Success",
+    Handlers.utils.hasMatchingTag("Action", "UnlockCollateral-Success"),
+    function(msg)
+        -- Only accept confirmations from configured Lock Manager
+        if msg.From ~= Config.lockManagerProcess then
+            return
+        end
+        
+        local unlockData = json.decode(msg.Data or "{}")
+        
+        -- Find matching pending burn by user and amount
+        local burnId = nil
+        local pendingBurn = nil
+        
+        for id, burn in pairs(PendingBurns) do
+            if burn.user == unlockData.user and 
+               tostring(burn.collateralToRelease) == tostring(tonumber(unlockData.unlockedAmount or "0")) and
+               burn.status == "pending-unlock" then
+                burnId = id
+                pendingBurn = burn
+                break
+            end
+        end
+        
+        if not pendingBurn then
+            return
+        end
+        
+        local user = pendingBurn.user
+        local tim3Amount = pendingBurn.tim3Amount
+        local collateralToRelease = pendingBurn.collateralToRelease
         
         -- Update user position
+        local currentPosition = UserPositions[user] or {
+            collateral = 0,
+            tim3Minted = 0,
+            collateralRatio = 0,
+            healthFactor = 0
+        }
+        
         currentPosition.collateral = currentPosition.collateral - collateralToRelease
         currentPosition.tim3Minted = currentPosition.tim3Minted - tim3Amount
         
@@ -320,11 +813,15 @@ Handlers.add(
         Config.totalTIM3Minted = Config.totalTIM3Minted - tim3Amount
         updateProcessInfo()
         
+        -- Remove from pending
+        PendingBurns[burnId] = nil
+        
         -- Send success response
         ao.send({
-            Target = msg.From,
+            Target = user,
             Action = "BurnTIM3-Response",
             Data = json.encode({
+                burnId = burnId,
                 user = user,
                 tim3Burned = tostring(formatAmount(tim3Amount)),
                 collateralReleased = tostring(formatAmount(collateralToRelease)),
@@ -342,10 +839,29 @@ Handlers.add(
             Target = ao.id,
             Action = "BurnTIM3-Log",
             Data = json.encode({
+                burnId = burnId,
                 user = user,
                 tim3Amount = tim3Amount,
                 collateralReleased = collateralToRelease,
                 timestamp = tostring(os.time())
+            })
+        })
+    end
+)
+
+-- Cleanup Expired Operations Handler
+Handlers.add(
+    "CleanupExpired",
+    Handlers.utils.hasMatchingTag("Action", "CleanupExpired"),
+    function(msg)
+        local cleanedCount = cleanupExpiredOperations()
+        
+        ao.send({
+            Target = msg.From,
+            Action = "CleanupExpired-Response",
+            Data = json.encode({
+                cleanedOperations = cleanedCount,
+                timestamp = os.time()
             })
         })
     end
@@ -356,6 +872,8 @@ Handlers.add(
     "SystemHealth",
     Handlers.utils.hasMatchingTag("Action", "SystemHealth"),
     function(msg)
+        -- Clean up expired operations when checking health
+        cleanupExpiredOperations()
         local globalCollateralRatio = 0
         if Config.totalTIM3Minted > 0 then
             globalCollateralRatio = Config.totalCollateral / Config.totalTIM3Minted

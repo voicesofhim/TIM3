@@ -2,7 +2,7 @@
 -- Manages USDA collateral locking/unlocking operations
 -- Interfaces with Mock USDA token for collateral management
 
-local json = require("cjson")
+-- JSON is available globally in AO environment
 
 -- Initialize process state
 Name = Name or "TIM3 Lock Manager"

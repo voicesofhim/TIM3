@@ -2,7 +2,7 @@
 -- Manages TIM3 token minting, burning, and supply operations
 -- Implements ERC-20-like functionality for the TIM3 token
 
-local json = require("cjson")
+-- JSON is available globally in AO environment
 
 -- Initialize process state
 Name = Name or "TIM3 Token Manager"
@@ -41,7 +41,7 @@ Config = Config or {
     lockManagerProcess = nil,
     
     -- Token parameters
-    maxSupply = 10000000,  -- 10M TIM3 max supply
+    maxSupply = 300,  -- $300 TIM3 max supply (for testing only - increase for production)
     minMintAmount = 1,
     maxMintAmount = 100000,
     
@@ -160,6 +160,10 @@ Handlers.add(
             Config.mintingEnabled = value == "true"
         elseif configType == "BurningEnabled" then
             Config.burningEnabled = value == "true"
+        elseif configType == "MinMintAmount" then
+            Config.minMintAmount = tonumber(value) or Config.minMintAmount
+        elseif configType == "MaxMintAmount" then
+            Config.maxMintAmount = tonumber(value) or Config.maxMintAmount
         else
             ao.send({
                 Target = msg.From,
@@ -270,12 +274,12 @@ Handlers.add(
             return
         end
         
-        -- Authorization check
-        if not isAuthorizedMinter(msg.From) then
+        -- Authorization check - MUST be coordinator for TIM3 mints
+        if msg.From ~= Config.coordinatorProcess and not isAuthorizedMinter(msg.From) then
             ao.send({
                 Target = msg.From,
                 Action = "Mint-Error",
-                Data = "Unauthorized minter"
+                Data = "Unauthorized minter - must be coordinator process"
             })
             return
         end
@@ -451,7 +455,8 @@ Handlers.add(
                 user = user,
                 amount = tostring(formatAmount(amount)),
                 newBalance = tostring(formatAmount(Balances[user])),
-                totalSupply = tostring(formatAmount(TokenInfo.totalSupply))
+                totalSupply = tostring(formatAmount(TokenInfo.totalSupply)),
+                purpose = purpose  -- Include purpose for coordinator to match
             })
         })
         

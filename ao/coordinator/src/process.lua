@@ -2,7 +2,7 @@
 -- Main orchestrator for the TIM3 collateralized token system
 -- Coordinates USDA locking and TIM3 minting operations
 
-local json = require("cjson")
+-- JSON is available globally in AO environment
 
 -- Initialize process state
 Name = Name or "TIM3 Coordinator"

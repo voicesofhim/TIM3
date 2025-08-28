@@ -2,7 +2,7 @@
 -- Manages USDA collateral locking/unlocking operations
 -- Interfaces with Mock USDA token for collateral management
 
-local json = require("cjson")
+-- JSON is available globally in AO environment
 
 -- Initialize process state
 Name = Name or "TIM3 Lock Manager"
@@ -27,7 +27,7 @@ Config = Config or {
     mockUsdaProcess = nil,
     
     -- Lock parameters
-    minLockAmount = 10,
+    minLockAmount = 1,  -- Aligned with coordinator minimum
     maxLockAmount = 1000000,
     lockDuration = 0,  -- 0 = indefinite until manual unlock
     

@@ -2,7 +2,7 @@
 -- Manages TIM3 token minting, burning, and supply operations
 -- Implements ERC-20-like functionality for the TIM3 token
 
-local json = require("cjson")
+-- JSON is available globally in AO environment
 
 -- Initialize process state
 Name = Name or "TIM3 Token Manager"
