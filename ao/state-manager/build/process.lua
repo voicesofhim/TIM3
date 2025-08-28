@@ -60,14 +60,16 @@ local function calculateHealthFactor(collateral, debt)
 end
 
 local function getRiskLevel(healthFactor)
-    if healthFactor >= Config.riskThresholds.healthy then
+    local thresholds = Config.riskThresholds
+    
+    if healthFactor >= thresholds.healthy then
         return "healthy"
-    elseif healthFactor >= Config.riskThresholds.warning then
+    elseif healthFactor >= thresholds.warning then
         return "warning"
-    elseif healthFactor >= Config.riskThresholds.danger then
+    elseif healthFactor >= thresholds.danger then
         return "danger"
     else
-        return "liquidation"
+        return "critical"
     end
 end
 
@@ -89,6 +91,10 @@ local function updateSystemMetrics()
     
     -- Analyze all user positions
     for user, position in pairs(UserPositions) do
+        -- Ensure position has valid values
+        position.collateral = position.collateral or 0
+        position.tim3Balance = position.tim3Balance or 0
+        
         if position.tim3Balance > 0 then
             positionCount = positionCount + 1
             local healthFactor = calculateHealthFactor(position.collateral, position.tim3Balance)
@@ -222,7 +228,11 @@ Handlers.add(
             }
         end
         
+        -- Ensure position has valid numeric values
         local position = UserPositions[user]
+        position.collateral = position.collateral or 0
+        position.tim3Balance = position.tim3Balance or 0
+        
         local oldCollateral = position.collateral
         local oldTIM3 = position.tim3Balance
         

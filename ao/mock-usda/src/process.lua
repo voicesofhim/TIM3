@@ -265,7 +265,8 @@ Handlers.add(
                 Data = json.encode({
                     user = user,
                     amount = tostring(formatAmount(amount)),
-                    lockId = user .. "-" .. tostring(os.time())
+                    lockId = msg.Tags.LockId or (user .. "-" .. tostring(os.time())),
+                    purpose = msg.Tags.Purpose  -- Include original purpose for validation
                 })
             })
         end

@@ -27,7 +27,7 @@ Config = Config or {
     mockUsdaProcess = nil,
     
     -- Lock parameters
-    minLockAmount = 10,
+    minLockAmount = 1,  -- Aligned with coordinator minimum
     maxLockAmount = 1000000,
     lockDuration = 0,  -- 0 = indefinite until manual unlock
     
