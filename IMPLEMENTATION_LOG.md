@@ -36,6 +36,12 @@
    - **State Management**: Process state persists correctly across messages
    - **Data Format**: JSON responses properly formatted and received
 
+4. **AI Agent Terminal Integration (Critical for Future Efficiency)**
+   - **AI Capabilities**: Directory navigation, AOS session startup, background processes, build commands
+   - **Human Required**: Interactive AOS Lua commands (Send, Inbox, etc.), real-time monitoring
+   - **Optimal Workflow**: AI handles environment setup → Human focuses on interactive testing → AI documents results
+   - **Efficiency**: AI automates 80% of setup/teardown, human concentrates on core functionality testing
+
 ### 📊 Test Results Summary
 ```
 ✅ Send({ Target = ao.id, Action = "Info" })

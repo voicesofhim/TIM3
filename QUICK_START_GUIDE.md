@@ -9,6 +9,25 @@
 - ✅ 1000 mUSDT successfully minted and tracked
 - 🔄 Next: Deploy remaining TIM3 processes (Coordinator, State Manager, Lock Manager, Token Manager)
 
+## 🤖 **AI Agent Terminal Integration**
+
+**What the AI Agent CAN Handle Automatically:**
+- ✅ Navigate to process directories (`cd` commands)
+- ✅ Start AOS sessions (`aos process-name-test`)
+- ✅ Manage background processes 
+- ✅ Run build commands and file operations
+- ✅ Set environment variables and maintain terminal context
+- ✅ Execute all non-interactive terminal operations
+
+**What Requires Your Manual Input:**
+- 🔴 Interactive AOS Lua commands (Send, Inbox, etc.)
+- 🔴 Any prompts requiring user input
+- 🔴 Real-time monitoring of running processes
+
+**Workflow**: *AI sets up environment → You handle interactive AOS testing → AI documents results*
+
+---
+
 ## 🚨 **Critical AOS Deployment Process (TESTED & WORKING)**
 
 ### **Step 1: Navigate to Process Directory**

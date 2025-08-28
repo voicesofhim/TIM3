@@ -146,6 +146,21 @@ apps/tim3/
 ## 🎯 **Next Actions**
 
 ### **Phase 1: Complete TIM3 System Deployment (Immediate Priority)**
+
+**🤖 AI Agent Responsibilities (Automated):**
+- Navigate to process directories
+- Start AOS sessions with proper naming
+- Load build files using absolute paths
+- Apply JSON compatibility fixes
+- Document process IDs and results
+
+**👤 Human Responsibilities (Interactive):**
+- Execute AOS Lua testing commands (Send, Inbox)
+- Verify process functionality
+- Confirm success before moving to next process
+
+---
+
 1. **Deploy Remaining TIM3 Processes to AOS**
    - Deploy Coordinator process to AOS
    - Deploy State Manager process to AOS  
