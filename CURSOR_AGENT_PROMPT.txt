@@ -1,0 +1,169 @@
+CURSOR AGENT PROMPT FOR TIM3 AOS TESTING
+
+You are working with the TIM3 project, built with Arweave AOS 
+🎯 PROJECT OVERVIEW
+==================
+TIM3 is a 1:1 USDA-backed token with a 5-process architecture:
+- TIM3 Coordinator: Main orchestrator for user interactions
+- Lock Manager: Handles USDA collateral locking/unlocking  
+- Token Manager: Manages TIM3 minting and burning
+- State Manager: Tracks collateral ratios and system state
+- Mock USDA: Development token for testing
+
+📍 CURRENT PROJECT LOCATION
+===========================
+/Users/ryanjames/Documents/CRØSS/W3B/S3ARCH/apps/tim3/
+
+🛠️ AVAILABLE TOOLS & ENVIRONMENT
+=================================
+- AOS CLI: /Users/ryanjames/.nvm/versions/node/v22.14.0/bin/aos
+- Lua: /opt/homebrew/bin/lua (v5.4)
+- Busted Testing: /opt/homebrew/bin/busted
+- JSON Libraries: lua-cjson and dkjson available
+
+🏗️ PROJECT STRUCTURE YOU'LL WORK WITH
+======================================
+apps/tim3/
+├── ao/                      # AO Processes
+│   ├── coordinator/         # Main orchestrator (18 tests)
+│   ├── lock-manager/        # USDA collateral management (12 tests)
+│   ├── token-manager/       # TIM3 token operations (17 tests)
+│   ├── state-manager/       # System state tracking (11 tests)
+│   ├── mock-usda/           # Development USDA token (25 tests)
+│   └── integration-tests/   # End-to-end flow tests
+├── processes.yaml           # AO deployment configuration
+├── STATUS.md               # Current project status
+└── README.md               # Project documentation
+
+🧪 TESTING CAPABILITIES
+=======================
+
+1. Individual Process Tests
+---------------------------
+Each process has comprehensive test suites:
+
+cd ao/mock-usda && busted test/simple_spec.lua
+cd ao/coordinator && busted test/coordinator_spec.lua
+cd ao/lock-manager && busted test/lock_manager_spec.lua
+cd ao/token-manager && busted test/token_manager_spec.lua
+cd ao/state-manager && busted test/state_manager_spec.lua
+
+2. Integration Tests
+--------------------
+Full system flow tests available:
+
+cd ao/integration-tests && busted complete_flow_spec.lua
+cd ao/integration-tests && busted advanced_integration_spec.lua
+
+3. Mock AO Environment
+----------------------
+Each test uses a sophisticated mock AO environment (test/mock_ao.lua) that simulates:
+- Handler system
+- Message passing
+- Process communication
+- State management
+
+🚀 AOS PROCESS INTERACTION
+==========================
+
+Deploy and Test Live Processes
+-------------------------------
+# Deploy a process to AOS
+aos my-test-process --load ao/mock-usda/build/process.lua
+
+# In AOS console, test basic functionality:
+Send({Target = ao.id, Action = "Info"})
+Send({Target = ao.id, Action = "Balance"})
+
+Available AOS Commands
+----------------------
+- aos [process-name] - Connect to or create a process
+- aos --load [file] - Load Lua file into process
+- aos --list - List your processes
+- aos --watch=[process] - Watch process console
+
+📋 YOUR TASKS
+=============
+
+Priority 1: Verify Test Suite
+------------------------------
+1. Fix JSON Issues: The tests currently fail due to JSON library issues. Fix the json global reference in process files.
+2. Run Individual Tests: Verify each process test suite passes
+3. Run Integration Tests: Ensure end-to-end flows work
+
+Priority 2: AOS Live Testing
+-----------------------------
+1. Deploy Mock USDA: Load the mock USDA process into AOS
+2. Test Basic Operations: Verify Info, Balance, Mint, Transfer functions
+3. Deploy Coordinator: Load and test the coordinator process
+4. Test Process Communication: Verify processes can communicate
+
+Priority 3: System Integration
+-------------------------------
+1. Multi-Process Setup: Deploy all 5 processes to AOS
+2. Configure Process IDs: Set up process communication links
+3. End-to-End Testing: Test complete TIM3 mint/burn flow
+4. Document Results: Update STATUS.md with findings
+
+🔧 KEY FILES TO EXAMINE
+=======================
+
+Process Sources
+---------------
+- ao/mock-usda/src/process.lua - Working token implementation
+- ao/coordinator/src/process.lua - Main orchestrator
+- ao/*/src/process.lua - Other process implementations
+
+Test Files
+----------
+- ao/mock-usda/test/simple_spec.lua - Basic token tests
+- ao/integration-tests/complete_flow_spec.lua - Full system test
+- ao/*/test/*_spec.lua - Individual process tests
+
+Configuration
+-------------
+- processes.yaml - Deployment configuration with process IDs
+- STATUS.md - Current project status and next steps
+
+🚨 KNOWN ISSUES TO ADDRESS
+==========================
+1. JSON Library: Tests fail due to json global not being available in test environment
+2. Process Communication: Need to verify cross-process messaging works in AOS
+3. State Persistence: Ensure process state persists correctly in AOS environment
+
+📊 SUCCESS METRICS
+==================
+- [ ] All individual process tests pass (83 tests total)
+- [ ] Integration tests demonstrate full system flow
+- [ ] Processes successfully deploy to AOS network  
+- [ ] Live AOS testing shows processes work as expected
+- [ ] Documentation updated with test results and findings
+
+💡 GETTING STARTED COMMANDS
+===========================
+# Navigate to project
+cd /Users/ryanjames/Documents/CRØSS/W3B/S3ARCH/apps/tim3
+
+# Check current status
+cat STATUS.md
+
+# Try running a simple test (may need JSON fix first)
+cd ao/mock-usda && busted test/simple_spec.lua
+
+# Start AOS with a test process
+aos test-usda --load ao/mock-usda/build/process.lua
+
+🎯 EXPECTED OUTCOME
+==================
+By the end of this session, we should have:
+1. ✅ Working test suite (all 83 tests passing)
+2. ✅ Successfully deployed processes to AOS
+3. ✅ Verified live process functionality
+4. ✅ Documented any issues and solutions
+5. ✅ Clear path forward for frontend integration
+
+This prompt gives you everything needed to understand the project, run the tests, work with AOS, and validate that the processes work correctly both in the mock environment and on the live AO network.
+
+The key insight is that the project already has extensive testing infrastructure - you just need to fix the JSON library issue and then can run comprehensive tests both locally and on AOS. You should be able to validate that the 5-process architecture works correctly and is ready for frontend integration.
+
+aos launched by running AOS in the terminal 

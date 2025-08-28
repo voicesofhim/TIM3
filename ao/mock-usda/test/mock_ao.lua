@@ -2,6 +2,7 @@
 -- This simulates the AO runtime environment that our processes expect
 
 local mock_ao = {}
+local json = require("cjson")
 
 -- Mock Handlers system
 local handlers = {}
@@ -57,6 +58,9 @@ ao = {
 mock_ao.reset = function()
     handler_list = {}
     sent_messages = {}
+    
+    -- Set up global json object for process.lua
+    _G.json = json
     
     -- Reset global state variables
     Balances = {}
