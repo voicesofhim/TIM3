@@ -6,7 +6,7 @@
 
 -- Initialize process state
 Name = Name or "TIM3 Coordinator"
-Ticker = Ticker or "TIM3-COORD"
+Ticker = Ticker or "TIM3"
 Version = Version or "1.0.0"
 
 -- Process Configuration
@@ -899,6 +899,147 @@ Handlers.add(
             Target = msg.From,
             Action = "SystemHealth-Response",
             Data = json.encode(systemHealth)
+        })
+    end
+)
+
+-- Configuration Handlers
+Handlers.add(
+    "SetProcessConfig",
+    Handlers.utils.hasMatchingTag("Action", "SetProcessConfig"),
+    function(msg)
+        -- Update process configurations
+        if msg.Tags.MockUsdaProcess then
+            Config.mockUsdaProcess = msg.Tags.MockUsdaProcess
+        end
+        if msg.Tags.StateManagerProcess then
+            Config.stateManagerProcess = msg.Tags.StateManagerProcess
+        end
+        if msg.Tags.LockManagerProcess then
+            Config.lockManagerProcess = msg.Tags.LockManagerProcess
+        end
+        if msg.Tags.TokenManagerProcess then
+            Config.tokenManagerProcess = msg.Tags.TokenManagerProcess
+        end
+        
+        -- Update process info
+        updateProcessInfo()
+        
+        -- Send confirmation
+        ao.send({
+            Target = msg.From,
+            Action = "SetProcessConfig-Response",
+            Data = json.encode({
+                mockUsdaProcess = Config.mockUsdaProcess,
+                stateManagerProcess = Config.stateManagerProcess,
+                lockManagerProcess = Config.lockManagerProcess,
+                tokenManagerProcess = Config.tokenManagerProcess,
+                timestamp = os.time()
+            })
+        })
+    end
+)
+
+-- Individual Process Configuration Handlers
+Handlers.add(
+    "SetMockUsdaProcess",
+    Handlers.utils.hasMatchingTag("Action", "SetMockUsdaProcess"),
+    function(msg)
+        Config.mockUsdaProcess = msg.Tags.ProcessId or msg.Data
+        updateProcessInfo()
+        
+        ao.send({
+            Target = msg.From,
+            Action = "SetMockUsdaProcess-Response",
+            Data = json.encode({
+                mockUsdaProcess = Config.mockUsdaProcess,
+                status = "configured",
+                timestamp = os.time()
+            })
+        })
+    end
+)
+
+Handlers.add(
+    "SetStateManagerProcess",
+    Handlers.utils.hasMatchingTag("Action", "SetStateManagerProcess"),
+    function(msg)
+        Config.stateManagerProcess = msg.Tags.ProcessId or msg.Data
+        updateProcessInfo()
+        
+        ao.send({
+            Target = msg.From,
+            Action = "SetStateManagerProcess-Response",
+            Data = json.encode({
+                stateManagerProcess = Config.stateManagerProcess,
+                status = "configured",
+                timestamp = os.time()
+            })
+        })
+    end
+)
+
+Handlers.add(
+    "SetLockManagerProcess",
+    Handlers.utils.hasMatchingTag("Action", "SetLockManagerProcess"),
+    function(msg)
+        Config.lockManagerProcess = msg.Tags.ProcessId or msg.Data
+        updateProcessInfo()
+        
+        ao.send({
+            Target = msg.From,
+            Action = "SetLockManagerProcess-Response",
+            Data = json.encode({
+                lockManagerProcess = Config.lockManagerProcess,
+                status = "configured",
+                timestamp = os.time()
+            })
+        })
+    end
+)
+
+Handlers.add(
+    "SetTokenManagerProcess",
+    Handlers.utils.hasMatchingTag("Action", "SetTokenManagerProcess"),
+    function(msg)
+        Config.tokenManagerProcess = msg.Tags.ProcessId or msg.Data
+        updateProcessInfo()
+        
+        ao.send({
+            Target = msg.From,
+            Action = "SetTokenManagerProcess-Response",
+            Data = json.encode({
+                tokenManagerProcess = Config.tokenManagerProcess,
+                status = "configured",
+                timestamp = os.time()
+            })
+        })
+    end
+)
+
+-- Configuration Status Handler
+Handlers.add(
+    "GetConfig",
+    Handlers.utils.hasMatchingTag("Action", "GetConfig"),
+    function(msg)
+        ao.send({
+            Target = msg.From,
+            Action = "GetConfig-Response",
+            Data = json.encode({
+                processes = {
+                    mockUsdaProcess = Config.mockUsdaProcess,
+                    stateManagerProcess = Config.stateManagerProcess,
+                    lockManagerProcess = Config.lockManagerProcess,
+                    tokenManagerProcess = Config.tokenManagerProcess
+                },
+                systemConfig = {
+                    collateralRatio = Config.collateralRatio,
+                    minMintAmount = Config.minMintAmount,
+                    maxMintAmount = Config.maxMintAmount,
+                    systemActive = Config.systemActive
+                },
+                timestamp = os.time()
+            })
         })
     end
 )

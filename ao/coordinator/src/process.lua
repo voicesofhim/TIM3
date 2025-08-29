@@ -6,7 +6,7 @@
 
 -- Initialize process state
 Name = Name or "TIM3 Coordinator"
-Ticker = Ticker or "TIM3-COORD"
+Ticker = Ticker or "TIM3"
 Version = Version or "1.0.0"
 
 -- Process Configuration

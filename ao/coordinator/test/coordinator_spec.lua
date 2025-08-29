@@ -23,7 +23,7 @@ describe("TIM3 Coordinator Process", function()
             
             local data = json.decode(messages[1].Data)
             assert.are.equal("TIM3 Coordinator", data.name)
-            assert.are.equal("TIM3-COORD", data.ticker)
+            assert.are.equal("TIM3", data.ticker)
             assert.are.equal("1.0.0", data.version)
             assert.are.equal(true, data.systemActive)
             assert.are.equal(1.0, data.collateralRatio)
