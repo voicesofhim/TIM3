@@ -1,0 +1,80 @@
+processes:
+  - name: tim3-coordinator-test
+    file: ao/coordinator/build/process.lua
+    scheduler: _GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA
+    module: cNlipBptaF9JeFAf4wUmpi43EojNanIBos3EfNrEOWo
+    tags:
+      - name: Process-Type
+        value: TIM3-Coordinator-Test
+      - name: Protocol
+        value: TIM3-Test
+      - name: Version
+        value: "2.0.0"
+      - name: Status
+        value: TEST
+      - name: Environment
+        value: development
+
+  - name: tim3-lock-manager-test
+    file: ao/lock-manager/build/process.lua
+    scheduler: _GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA
+    module: cNlipBptaF9JeFAf4wUmpi43EojNanIBos3EfNrEOWo
+    tags:
+      - name: Process-Type
+        value: TIM3-Lock-Manager-Test
+      - name: Protocol
+        value: TIM3-Test
+      - name: Version
+        value: "1.0.0"
+      - name: Status
+        value: TEST
+      - name: Environment
+        value: development
+
+  - name: tim3-token-manager-test
+    file: ao/token-manager/build/process.lua
+    scheduler: _GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA
+    module: cNlipBptaF9JeFAf4wUmpi43EojNanIBos3EfNrEOWo
+    tags:
+      - name: Process-Type
+        value: TIM3-Token-Manager-Test
+      - name: Protocol
+        value: TIM3-Test
+      - name: Version
+        value: "1.0.0"
+      - name: Status
+        value: TEST
+      - name: Environment
+        value: development
+
+  - name: tim3-state-manager-test
+    file: ao/state-manager/build/process.lua
+    scheduler: _GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA
+    module: cNlipBptaF9JeFAf4wUmpi43EojNanIBos3EfNrEOWo
+    tags:
+      - name: Process-Type
+        value: TIM3-State-Manager-Test
+      - name: Protocol
+        value: TIM3-Test
+      - name: Version
+        value: "1.0.0"
+      - name: Status
+        value: TEST
+      - name: Environment
+        value: development
+
+  - name: mock-usda-test
+    file: ao/mock-usda/build/process.lua
+    scheduler: _GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA
+    module: cNlipBptaF9JeFAf4wUmpi43EojNanIBos3EfNrEOWo
+    tags:
+      - name: Process-Type
+        value: Mock-USDA-Test
+      - name: Protocol
+        value: TIM3-Test
+      - name: Version
+        value: "1.0.0"
+      - name: Status
+        value: TEST
+      - name: Environment
+        value: development
