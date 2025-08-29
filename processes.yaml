@@ -1,20 +1,24 @@
 processes:
-  - name: tim3-coordinator
+  - name: tim3-coordinator-enhanced
     file: ao/coordinator/build/process.lua
     scheduler: _GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA
     module: cNlipBptaF9JeFAf4wUmpi43EojNanIBos3EfNrEOWo
+    process_id: dxkd6zkK2t5k0fv_-eG3WRTtZaExetLV0410xI6jfsw
     tags:
       - name: Process-Type
-        value: TIM3-Coordinator
+        value: TIM3-Coordinator-Enhanced
       - name: Protocol
         value: TIM3
       - name: Version
-        value: "1.0.0"
+        value: "2.0.0"
+      - name: Status
+        value: PRODUCTION
 
   - name: tim3-lock-manager
     file: ao/lock-manager/build/process.lua
     scheduler: _GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA
     module: cNlipBptaF9JeFAf4wUmpi43EojNanIBos3EfNrEOWo
+    process_id: MWxRVsCDoSzQ0MhG4_BWkYs0fhcULB-OO3f2t1RlBAs
     tags:
       - name: Process-Type
         value: TIM3-Lock-Manager
@@ -22,11 +26,14 @@ processes:
         value: TIM3
       - name: Version
         value: "1.0.0"
+      - name: Status
+        value: DEPLOYED
 
   - name: tim3-token-manager
     file: ao/token-manager/build/process.lua
     scheduler: _GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA
     module: cNlipBptaF9JeFAf4wUmpi43EojNanIBos3EfNrEOWo
+    process_id: BUhWwGfuD1GUHVIIWF_Jhm1mfcyAYHOJS6W90ur2Bb0
     tags:
       - name: Process-Type
         value: TIM3-Token-Manager
@@ -34,11 +41,14 @@ processes:
         value: TIM3
       - name: Version
         value: "1.0.0"
+      - name: Status
+        value: DEPLOYED
 
   - name: tim3-state-manager
     file: ao/state-manager/build/process.lua
     scheduler: _GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA
     module: cNlipBptaF9JeFAf4wUmpi43EojNanIBos3EfNrEOWo
+    process_id: K2FjwiTmncglx0pISNMft5-SngxW-HUjs9sctzmXtU4
     tags:
       - name: Process-Type
         value: TIM3-State-Manager
@@ -46,11 +56,14 @@ processes:
         value: TIM3
       - name: Version
         value: "1.0.0"
+      - name: Status
+        value: DEPLOYED
 
   - name: mock-usda
     file: ao/mock-usda/build/process.lua
     scheduler: _GQ33BkPtZrqxA84vM8Zk-N2aO0toNNu_C-l-rawrBA
     module: cNlipBptaF9JeFAf4wUmpi43EojNanIBos3EfNrEOWo
+    process_id: u8DzisIMWnrfGa6nlQvf1J79kYkv8uWjDeXZ489UMXQ
     tags:
       - name: Process-Type
         value: Mock-USDA
@@ -58,3 +71,5 @@ processes:
         value: TIM3-Development
       - name: Version
         value: "1.0.0"
+      - name: Status
+        value: DEPLOYED
