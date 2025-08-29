@@ -31,7 +31,7 @@ Config = Config or {
     -- Rate limiting
     blockMintTotal = 0,         -- Current block mint total
     lastBlockReset = 0,         -- Last time block counter was reset
-    blockTimeWindow = 3600      -- 1 hour window for rate limiting
+    blockTimeWindow = 3600,     -- 1 hour window for rate limiting
     
     -- System status
     systemActive = true,
