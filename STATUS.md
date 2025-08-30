@@ -1,7 +1,7 @@
 # TIM3 Project Status Report
 
 **Last Updated**: January 28, 2025  
-**Current Phase**: 🎉 **PRODUCTION READY - TIM3 SYSTEM 100% COMPLETE!** 🎉
+**Current Phase**: ✅ **Production plan updated – Coordinator v2 (deposit-based 1:1) approved**
 
 ## 🎯 **Overall Progress: 100% Complete - ENHANCED COORDINATOR DEPLOYED & TESTED!**
 
@@ -44,6 +44,7 @@
 - [x] TIM3 Lock Manager process (Collateral handling - 12 tests ✅)  
 - [x] TIM3 Token Manager process (Token operations - 17 tests ✅)
 - [x] 1:1 USDA backing system (Corrected from over-collateralization)
+- [x] Coordinator v2 plan: deposit-based mint via USDA Credit-Notice (no Lock Manager)
 - [x] Comprehensive test suite (83 tests passing across 5 processes)
 - [x] Inter-process communication configuration scripts created ✅
 - [x] Comprehensive integration testing framework developed ✅
@@ -162,7 +163,15 @@ apps/tim3/
 
 ---
 
-## 🎯 **Next Actions**
+## 🎯 **Next Actions (Coordinator v2 Migration)**
+
+1. Deploy Coordinator v2 (new AO process) from `ao/coordinator/build/process.lua`.
+2. Configure with production PIDs: `TokenManager`, `StateManager` (optional), `AllowedUSDA=FBt9A5GA...`, `CollateralRatio=1.0`.
+3. Authorize Coordinator v2 as a minter in `Token Manager` (`allowedMinters`).
+4. Point USDA `Transfer.Recipient` to Coordinator v2 for deposits.
+5. Verify `Credit-Notice → Mint` 1:1 flow on `ao.link` with a low-value test.
+6. Optional (Phase 2): Implement `RedeemTIM3` (burn → USDA transfer back).
+7. Optional (Phase 3): Introduce Vault and move custody from Coordinator to Vault.
 
 ### **Phase 1: Complete TIM3 System Deployment (Immediate Priority)**
 

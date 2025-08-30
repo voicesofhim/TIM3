@@ -74,6 +74,24 @@ With Mock-USDA proven on live AOS, we're ready to deploy the complete TIM3 syste
 
 ---
 
+## 📘 Coordinator v2 Spec Recorded (2025-08-30)
+
+- Decision: 1:1 deposit-based mint; Coordinator receives USDA now, Vault later.
+- Trigger: USDA `Credit-Notice` to Coordinator → mint TIM3 1:1 to `Sender`.
+- Config: `tokenManager=BUhWwGfu...`, `stateManager=K2FjwiT...` (optional), `allowedUSDA=FBt9A5G...`, `collateralRatio=1.0`.
+- Security: Only accept `Credit-Notice` from configured USDA PID; ensure Token Manager `allowedMinters` contains Coordinator v2.
+- Flow tags:
+  - Deposit: `Transfer{ Recipient=<CoordinatorPID>, Quantity }` (user → USDA)
+  - Notice: `Credit-Notice{ Sender, Quantity }` (USDA → Coordinator)
+  - Mint: `Mint{ Recipient=<Sender>, Amount=<Quantity>, Purpose=TIM3-mint-<id> }` (Coordinator → Token Manager)
+
+### Migration Plan Logged
+1. Deploy Coordinator v2 and configure with production PIDs.
+2. Authorize minter in Token Manager.
+3. Point deposits to Coordinator v2 PID; verify on `ao.link`.
+4. Phase 2: add Redeem; Phase 3: introduce Vault.
+
+
 ## ✅ Phase 1: Foundation Setup (COMPLETED)
 
 ### 🏗️ Project Structure (2025-08-26)
