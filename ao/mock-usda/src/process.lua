@@ -214,7 +214,7 @@ Handlers.add(
     "Lock",
     Handlers.utils.hasMatchingTag("Action", "Lock"),
     function(msg)
-        local user = msg.From
+        local user = msg.Tags.User or msg.From  -- Use User tag if provided, otherwise msg.From
         local amount = tonumber(msg.Tags.Amount or msg.Tags.Quantity)
         local locker = msg.Tags.Locker  -- Process that's requesting the lock (TIM3 Lock Manager)
         
