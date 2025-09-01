@@ -5,10 +5,10 @@
 -- Live Process IDs (deployed to AOS)
 PROCESS_IDS = {
     MOCK_USDA = "u8DzisIMWnrfGa6nlQvf1J79kYkv8uWjDeXZ489UMXQ",
-    COORDINATOR = "DoXrn6DGZZuDMkyun4rmXh7k8BY8pVxFpr3MnBWYJFw", 
+    COORDINATOR = "uNhmrUij4u6ZZr_39BDI5E2G2afkit8oC7q4vAtRskM", -- Updated to new Orchestrator
     STATE_MANAGER = "K2FjwiTmncglx0pISNMft5-SngxW-HUjs9sctzmXtU4",
     LOCK_MANAGER = "MWxRVsCDoSzQ0MhG4_BWkYs0fhcULB-OO3f2t1RlBAs",
-    TOKEN_MANAGER = "BUhWwGfuD1GUHVIIWF_Jhm1mfcyAYHOJS6W90ur2Bb0"
+    TOKEN_MANAGER = "DoXrn6DGZZuDMkyun4rmXh7k8BY8pVxFpr3MnBWYJFw" -- Updated to correct Token Manager
 }
 
 -- Configuration Functions

@@ -1,11 +1,11 @@
--- TIM3 Coordinator Process
+-- TIM3 Orchestrator Process
 -- Main orchestrator for the TIM3 collateralized token system
 -- Coordinates USDA locking and TIM3 minting operations
 
 -- JSON is available globally in AO environment
 
 -- Initialize process state
-Name = Name or "TIM3 Coordinator"
+Name = Name or "TIM3 Orchestrator"
 Ticker = Ticker or "TIM3"
 Version = Version or "1.0.0"
 
@@ -13,6 +13,7 @@ Version = Version or "1.0.0"
 Config = Config or {
     -- Specialist process addresses (will be set via configuration messages)
     mockUsdaProcess = nil,
+    allowedUsdaProcess = nil,
     stateManagerProcess = nil,
     lockManagerProcess = nil,
     tokenManagerProcess = nil,
@@ -282,6 +283,8 @@ Handlers.add(
             Config.lockManagerProcess = value
         elseif configType == "TokenManagerProcess" then
             Config.tokenManagerProcess = value
+        elseif configType == "AllowedUSDAProcess" then
+            Config.allowedUsdaProcess = value
         elseif configType == "CollateralRatio" then
             Config.collateralRatio = tonumber(value) or Config.collateralRatio
         elseif configType == "SystemActive" then
@@ -513,6 +516,46 @@ Handlers.add(
     end
 )
 
+-- USDA Credit Notice → Mint TIM3 (1:1 deposit-based)
+Handlers.add(
+    "USDA-Credit-Notice",
+    Handlers.utils.hasMatchingTag("Action", "Credit-Notice"),
+    function(msg)
+        -- Guards
+        if not Config.systemActive or Config.emergencyPaused then return end
+        if not Config.tokenManagerProcess then return end
+        if not Config.allowedUsdaProcess or msg.From ~= Config.allowedUsdaProcess then return end
+        if msg.To and msg.To ~= ao.id then return end
+
+        local sender = msg.Tags.Sender or msg.From
+        local quantity = tonumber(msg.Tags.Quantity)
+        if not quantity or quantity <= 0 then return end
+
+        local tim3Amount = quantity -- 1:1
+
+        -- Generate a simple pending op id to attribute collateral on Mint-Response
+        local mintId = sender .. "-deposit-" .. tostring(os.time()) .. "-" .. tostring(math.random(1000, 9999))
+        PendingMints[mintId] = {
+            mintId = mintId,
+            user = sender,
+            tim3Amount = tim3Amount,
+            requiredCollateral = tim3Amount,
+            timestamp = os.time(),
+            status = "pending-token-mint"
+        }
+
+        ao.send({
+            Target = Config.tokenManagerProcess,
+            Action = "Mint",
+            Tags = {
+                Recipient = sender,
+                Amount = tostring(tim3Amount),
+                Purpose = "TIM3-mint-" .. mintId
+            }
+        })
+    end
+)
+
 -- Mint Confirmation Handler (from Token Manager)
 Handlers.add(
     "Mint-Response",
@@ -556,6 +599,23 @@ Handlers.add(
         Config.totalCollateral = Config.totalCollateral + requiredCollateral
         Config.totalTIM3Minted = Config.totalTIM3Minted + tim3Amount
         updateProcessInfo()
+        
+        -- Update State Manager with position change
+        if Config.stateManagerProcess then
+            ao.send({
+                Target = Config.stateManagerProcess,
+                Action = "UpdatePosition",
+                Tags = {
+                    User = user,
+                    TokenType = "TIM3", 
+                    Amount = tostring(tim3Amount),
+                    Operation = "mint",
+                    CollateralType = "USDA",
+                    CollateralAmount = tostring(requiredCollateral),
+                    Timestamp = tostring(os.time())
+                }
+            })
+        end
         
         -- Update circuit breaker counters
         updateCircuitBreakerCounters(user, tim3Amount)
@@ -813,6 +873,23 @@ Handlers.add(
         Config.totalTIM3Minted = Config.totalTIM3Minted - tim3Amount
         updateProcessInfo()
         
+        -- Update State Manager with position change
+        if Config.stateManagerProcess then
+            ao.send({
+                Target = Config.stateManagerProcess,
+                Action = "UpdatePosition", 
+                Tags = {
+                    User = user,
+                    TokenType = "TIM3",
+                    Amount = "-" .. tostring(tim3Amount), -- Negative for burn
+                    Operation = "burn",
+                    CollateralType = "USDA", 
+                    CollateralAmount = "-" .. tostring(collateralToRelease),
+                    Timestamp = tostring(os.time())
+                }
+            })
+        end
+        
         -- Remove from pending
         PendingBurns[burnId] = nil
         
@@ -921,6 +998,9 @@ Handlers.add(
         if msg.Tags.TokenManagerProcess then
             Config.tokenManagerProcess = msg.Tags.TokenManagerProcess
         end
+        if msg.Tags.AllowedUSDAProcess then
+            Config.allowedUsdaProcess = msg.Tags.AllowedUSDAProcess
+        end
         
         -- Update process info
         updateProcessInfo()
@@ -931,6 +1011,7 @@ Handlers.add(
             Action = "SetProcessConfig-Response",
             Data = json.encode({
                 mockUsdaProcess = Config.mockUsdaProcess,
+                allowedUsdaProcess = Config.allowedUsdaProcess,
                 stateManagerProcess = Config.stateManagerProcess,
                 lockManagerProcess = Config.lockManagerProcess,
                 tokenManagerProcess = Config.tokenManagerProcess,
@@ -953,8 +1034,7 @@ Handlers.add(
             Action = "SetMockUsdaProcess-Response",
             Data = json.encode({
                 mockUsdaProcess = Config.mockUsdaProcess,
-                status = "configured",
-                timestamp = os.time()
+                status = "configured"
             })
         })
     end
@@ -972,8 +1052,7 @@ Handlers.add(
             Action = "SetStateManagerProcess-Response",
             Data = json.encode({
                 stateManagerProcess = Config.stateManagerProcess,
-                status = "configured",
-                timestamp = os.time()
+                status = "configured"
             })
         })
     end
@@ -991,8 +1070,7 @@ Handlers.add(
             Action = "SetLockManagerProcess-Response",
             Data = json.encode({
                 lockManagerProcess = Config.lockManagerProcess,
-                status = "configured",
-                timestamp = os.time()
+                status = "configured"
             })
         })
     end
@@ -1010,8 +1088,7 @@ Handlers.add(
             Action = "SetTokenManagerProcess-Response",
             Data = json.encode({
                 tokenManagerProcess = Config.tokenManagerProcess,
-                status = "configured",
-                timestamp = os.time()
+                status = "configured"
             })
         })
     end
@@ -1028,6 +1105,7 @@ Handlers.add(
             Data = json.encode({
                 processes = {
                     mockUsdaProcess = Config.mockUsdaProcess,
+                    allowedUsdaProcess = Config.allowedUsdaProcess,
                     stateManagerProcess = Config.stateManagerProcess,
                     lockManagerProcess = Config.lockManagerProcess,
                     tokenManagerProcess = Config.tokenManagerProcess
