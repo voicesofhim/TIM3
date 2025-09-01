@@ -1,4 +1,13 @@
 -- Apply Lock Manager Transfer Fix
+-- 
+-- This script implements a new transfer-based approach for USDA locking:
+-- 1. Modified LockCollateral Handler: Instead of sending Lock commands to USDA, it creates a
+--    "awaiting-transfer" state and asks the user to transfer USDA directly
+-- 2. New Credit-Notice Handler: Listens for USDA transfers and matches them to pending mint operations
+-- 3. Perfect User Flow:
+--    - User clicks "Mint 5 TIM3"
+--    - Gets response: "Transfer 5 USDA to: MWx..."
+--    - User transfers → Credit-Notice received → Mint proceeds
 json = require('json')
 
 -- New Lock Collateral Handler (Modified to expect user-initiated transfers)
