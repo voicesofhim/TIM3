@@ -21,7 +21,7 @@ Config = Config or {
     -- System parameters
     collateralRatio = 1.0,  -- 1:1 USDA backing ratio
     minMintAmount = 1,      -- Minimum TIM3 mint amount (prevent dust attacks)
-    maxMintAmount = 100000, -- Maximum TIM3 mint amount
+    maxMintAmount = 1000000000000, -- Maximum TIM3 mint amount (1 billion base units = 1000 USDA)
     
     -- Circuit breaker parameters
     maxMintPerUser = 50000,     -- Maximum TIM3 per user per period

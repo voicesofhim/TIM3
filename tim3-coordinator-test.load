@@ -1,2 +1,128 @@
 json = require('json')
 .load /Users/ryanjames/Documents/CRØSS/W3B/S3ARCH/apps/tim3/ao/coordinator/build/process.lua
+
+wander: 2fSKy8T_MWCk4RRBtZwGL8TECg9wDCuQD90Y2IeyRQg
+
+AOS Wander Wallet: eY-ZsWFsL4ntgbeUBrcwSQ6G8UNl06ZXSEXMh8qrjCM
+
+coordinator: uNhmrUij4u6ZZr_39BDI5E2G2afkit8oC7q4vAtRskM
+
+Inbox[#Inbox]
+
+CHECK BALLANCE: Send({Target="PID",Action="Balance"})
+
+Send({Target=ao.id,Action="Balance",Tags={Target="2fSKy8T_MWCk4RRBtZwGL8TECg9wDCuQD90Y2IeyRQg"}})
+
+print(ao.id)
+print(Name)
+aos --list
+Send({ Target = ao.id, Action = "Info" })
+ao.env.Process.Owner
+
+
+
+Process	PID	Status
+Coordinator	    dxkd6zkK2t5k0fv_-eG3WRTtZaExetLV0410xI6jfsw	🏭 PRODUCTION
+Lock Manager	MWxRVsBUhWwGfuD1GUHVIIWF_Jhm1mfcyAYHOJS6W90ur2Bb0CDoSzQ0MhG4_BWkYs0fhcULB-OO3f2t1RlBAs	🏭 PRODUCTION
+Token Manager		🏭 PRODUCTION
+State Manager	K2FjwiTmncglx0pISNMft5-SngxW-HUjs9sctzmXtU4	🏭 PRODUCTION
+USDA (Real)	    FBt9A5GA_KXMMSxA2DJ0xZbAq8sLLU2ak-YJe9zDvg8	🏭 PRODUCTION
+
+
+
+
+
+
+🧪 TEST PROCESSES (Safe for Development)
+Process	PID	Status
+Coordinator v2	uNhmrUij4u6ZZr_39BDI5E2G2afkit8oC7q4vAtRskM	🧪 TEST (State Manager Fixed)
+Lock Manager	MWxRVsCDoSzQ0MhG4_BWkYs0fhcULB-OO3f2t1RlBAs	🧪 TEST (shared with prod)
+Token Manager	DoXrn6DGZZuDMkyun4rmXh7k8BY8pVxFpr3MnBWYJFw	🧪 TEST
+State Manager	K2FjwiTmncglx0pISNMft5-SngxW-HUjs9sctzmXtU4	🧪 TEST (shared with prod)
+Mock USDA	u8DzisIMWnrfGa6nlQvf1J79kYkv8uWjDeXZ489UMXQ	🧪 TEST (can mint unlimited)
+
+
+-- Connect to your process
+aos uNhmrUij4u6ZZr_39BDI5E2G2afkit8oC7q4vAtRskM
+
+-- Change the name
+Name = "My Custom Orchestrator Name"
+
+-- Verify the change
+print(Name)
+
+-- How Much USDA Do I have 
+Send({Target="FBt9A5GA_KXMMSxA2DJ0xZbAq8sLLU2ak-YJe9zDvg8",Action="Balance",Tags={Recipient="fcoN_xJeisVsPXA-trzVAuIiqO3ydLQxM-L4XbrQKzY"}})
+
+OWNER? DqH78Ox2O8D7OcUJg_aUyDrq_MGt3fde151DZe4Qcx8
+
+Process Owner: DqH78Ox2O8D7OcUJg_aUyDrq_MGt3fde151DZe4Qcx8 (who created the coordinator process)
+Your Wander Wallet: eY-ZsWFsL4ntgbeUBrcwSQ6G8UNl06ZXSEXMh8qrjCM (your actual wallet address)
+
+AOS Wander Wallet: eY-ZsWFsL4ntgbeUBrcwSQ6G8UNl06ZXSEXMh8qrjCM : Balance = "460000000000",
+Process Owner: DqH78Ox2O8D7OcUJg_aUyDrq_MGt3fde151DZe4Qcx8 : BALLANCE = 0 USDA 
+----------------------------------------
+
+checkTIM3Balance()
+checkUsdaBalance()
+checkLockManagerStatus()
+mintTIM3()
+checkTIM3Balance()
+
+setLockManagerConfig()
+
+
+1. Check starting TIM3 balance:
+  checkTIM3Balance()
+  Inbox[#Inbox]  -- Result: "balance":"0" ✅
+
+  2. Check USDA collateral:
+  checkUsdaBalance()
+  Inbox[#Inbox]  -- Result: "Balance":"4930000000000" ✅ (4.93 USDA)
+
+  3. Check Lock Manager status:
+  checkLockManagerStatus()
+  Inbox[#Inbox]  -- Result: "mockUsdaConfigured":false ❌ (THE BLOCKER)
+
+  4. Execute the historic mint:
+  mintTIM3()
+  Inbox[#Inbox]  -- Result: "MintTIM3-Pending" with "status":"pending-collateral-lock" ⏳
+
+  5. Check balance again:
+  checkTIM3Balance()
+  Inbox[#Inbox]  -- Result: Still "balance":"0" (mint stuck)
+
+  6. Attempted fix (multiple times):
+  setLockManagerConfig()
+  Inbox[#Inbox]  -- Configuration commands sent but responses not visible
+
+
+  Send({Target="MWxRVsCDoSzQ0MhG4_BWkYs0fhcULB-OO3f2t1RlBAs", Action="Configure", Tags={ConfigType="MockUsdaProcess", Value="FBt9A5GA_KXMMSxA2DJ0xZbAq8sLLU2ak-YJe9zDvg8"}})
+
+  Send({Target="MWxRVsCDoSzQ0MhG4_BWkYs0fhcULB-OO3f2t1RlBAs", Action="Configure", Tags={["ConfigType"]="MockUsdaProcess", ["Value"]="FBt9A5GA_KXMMSxA2DJ0xZbAq8sLLU2ak-YJe9zDvg8"}})
+
+  Send({Target="MWxRVsCDoSzQ0MhG4_BWkYs0fhcULB-OO3f2t1RlBAs", Action="Eval", Data="Config.mockUsdaProcess='FBt9A5GA_KXMMSxA2DJ0xZbAq8sLLU2ak-YJe9zDvg8'; ao.send({Target=ao.id, Action='Info'})"})
+
+
+  Send({Target="FBt9A5GA_KXMMSxA2DJ0xZbAq8sLLU2ak-YJe9zDvg8", Action="Eval", Data="json = require('json'); Handlers.add('Lock', Handlers.utils.hasMatchingTag('Action', 'Lock'), function(msg) local user = msg.Tags.User or msg.From; local amount = tonumber(msg.Tags.Amount or msg.Tags.Quantity); local locker = msg.Tags.Locker; if not amount or amount <= 0 then ao.send({Target = msg.From, Action = 'Lock-Error', Data = 'Invalid amount'}); return; end; local userBalance = Balances[user] or 0; local userLocked = Locked[user] or 0; local availableBalance = userBalance - userLocked; if availableBalance < amount then ao.send({Target = msg.From, Action = 'Lock-Error', Data = 'Insufficient available balance'}); return; end; Locked[user] = userLocked + amount; ao.send({Target = msg.From, Action = 'Lock-Response', Data = json.encode({user = user, amount = tostring(amount)})}); if locker then ao.send({Target = locker, Action = 'Lock-Confirmed', Data = json.encode({user = user, amount = tostring(amount), lockId = msg.Tags.LockId or (user .. '-' .. tostring(os.time())), purpose = msg.Tags.Purpose})}); end; end); print('Lock handler fixed')"})
+
+  Send({Target="FBt9A5GA_KXMMSxA2DJ0xZbAq8sLLU2ak-YJe9zDvg8", Action="Lock", Tags={User="4BhvDrGVOjJH1PqhGl9OOfjaQZw6POvWQAPShYSWYIs", Amount="1", Locker="MWxRVsCDoSzQ0MhG4_BWkYs0fhcULB-OO3f2t1RlBAs", LockId="test-lock-999"}})Send({Target = "MWxRVsCDoSzQ0MhG4_BWkYs0fhcULB-OO3f2t1RlBAs", Action = "Transfer", Quantity = "1000000", Recipient = "MWxRVsCDoSzQ0MhG4_BWkYs0fhcULB-OO3f2t1RlBAs"})
+
+  .load /Users/ryanjames/Documents/CRØSS/W3B/S3ARCH/apps/tim3/scripts/apply-transfer-fix.lua
+
+  Send({Target = Config.lockManagerProcess, Action = "LockCollateral", Tags = {User = ao.id, Amount = "1000000", Purpose = "TIM3-mint"}})
+
+   isAuthorizedCaller = function(caller) return caller == Config.coordinatorProcess or caller == Config.stateManagerProcess end
+
+   isAuthorizedCaller("dxkd6zkK2t5k0fv_-eG3WRTtZaExetLV0410xI6jfsw")
+
+   Send({
+      Target = ao.id,
+      Action = "LockCollateral",
+      From = "dxkd6zkK2t5k0fv_-eG3WRTtZaExetLV0410xI6jfsw",
+      Tags = {
+          User = "dxkd6zkK2t5k0fv_-eG3WRTtZaExetLV0410xI6jfsw",
+          Amount = "1000000",
+          Purpose = "TIM3-mint"
+      }
+  })
