@@ -3,3 +3,6 @@
 .load ao/mock-usda/build/process.lua
 
 print('Mock USDA loaded. Use Mint/Transfer/Balance for testing.')
+
+print("PID: " .. ao.id)
+print("Copy this PID into: configure-integration.lua, verify-e2e.lua, verify-test-processes.lua")

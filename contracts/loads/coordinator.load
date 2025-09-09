@@ -3,3 +3,6 @@
 .load ao/coordinator/build/process.lua
 
 print('Coordinator loaded. Use Configure messages to set Lock/Token/State/USDA PIDs.')
+
+print("PID: " .. ao.id)
+print("Copy this PID into: configure-integration.lua, verify-e2e.lua, verify-test-processes.lua")

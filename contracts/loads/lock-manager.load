@@ -3,3 +3,6 @@
 .load ao/lock-manager/build/process.lua
 
 print('Lock Manager loaded. Configure with Coordinator/State/Mock USDA PIDs.')
+
+print("PID: " .. ao.id)
+print("Copy this PID into: configure-integration.lua, verify-e2e.lua, verify-test-processes.lua")
