@@ -14,7 +14,7 @@
   - `contracts/verify/verify-processes.sh`
 
 Then:
-- `./contracts/verify/verify-processes.sh` to confirm reachability
+-  to confirm reachability
 - `aos --load contracts/scripts/verify-e2e.lua` for the end-to-end flow
 
 # TIM3 - Collateralized Token on Arweave AO
@@ -130,7 +130,7 @@ TIM3 is designed to integrate with the broader AO DeFi ecosystem:
 ## AOS Quick Verify
 
 - Check deployed test processes are reachable:
-  - `./contracts/verify/verify-processes.sh`
+  - 
 
 ## End-to-End Verify (USDA → TIM3)
 
