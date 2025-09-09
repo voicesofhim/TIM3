@@ -111,14 +111,14 @@ TIM3 is designed to integrate with the broader AO DeFi ecosystem:
 ## AOS Quick Verify
 
 - Check deployed test processes are reachable:
-  - `./verify-processes.sh`
+  - `./contracts/verify/verify-processes.sh`
 
 ## End-to-End Verify (USDA → TIM3)
 
 This runs a mint flow against deployed TEST processes.
 
 - Run once:
-  - `aos --load scripts/verify-e2e.lua`
+  - `aos --load contracts/scripts/verify-e2e.lua`
 
 What it does:
 - Applies the Lock Manager transfer-based fix (so user transfers USDA, then mint proceeds)
@@ -129,5 +129,5 @@ What it does:
 - Queries and prints your TIM3 balance
 
 Notes:
-- If PIDs change, update them at the top of `scripts/verify-e2e.lua`.
+- If PIDs change, update them at the top of `contracts/scripts/verify-e2e.lua`.
 - If any step fails, re-run once after ~10s to allow messages to settle.
