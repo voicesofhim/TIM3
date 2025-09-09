@@ -9,10 +9,10 @@ echo "Deployed: January 29, 2025"
 echo ""
 
 # Test Process IDs
-COORDINATOR="hjob4ditas_ZLM1MWil7lBfflRSTxsnsXrqZSTfxnBM"
-LOCK_MANAGER="CpNinM9_VCYGlp5BVIwK-eD4mdiv3sH2mxK6SPH0nlY"
-TOKEN_MANAGER="IDSlr52PKHDMK1fICKDWfxDjlda6JwIcN4MBHR6kfU4"
-STATE_MANAGER="jBINaOVF2wLCK9BeZZYUYWBkPZ0EwgvevW4w-uDpDYk"
+COORDINATOR="uNhmrUij4u6ZZr_39BDI5E2G2afkit8oC7q4vAtRskM"
+LOCK_MANAGER="MWxRVsCDoSzQ0MhG4_BWkYs0fhcULB-OO3f2t1RlBAs"
+TOKEN_MANAGER="DoXrn6DGZZuDMkyun4rmXh7k8BY8pVxFpr3MnBWYJFw"
+STATE_MANAGER="K2FjwiTmncglx0pISNMft5-SngxW-HUjs9sctzmXtU4"
 
 # Function to check if a process exists
 check_process() {
