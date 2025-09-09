@@ -152,19 +152,19 @@ log("Applying Lock Manager transfer-based fix...")
 Send({ Target = P.LOCK_MANAGER, Action = "Eval", Data = LOCK_FIX })
 
 -- 2) Ensure USDA balance for this session
-log("Minting 5 Mock USDA to this session (" .. ao.id .. ")...")
-Send({ Target = P.MOCK_USDA, Action = "Mint", Tags = { Amount = "5" } })
+log("Minting 0.01 Mock USDA to this session (" .. ao.id .. ")...")
+Send({ Target = P.MOCK_USDA, Action = "Mint", Tags = { Amount = "0.01" } })
 
 -- 3) Request mint of 5 TIM3 via coordinator
-log("Requesting mint of 5 TIM3 via Coordinator...")
-Send({ Target = P.COORDINATOR, Action = "MintTIM3", Tags = { Amount = "5" } })
+log("Requesting mint of 0.01 TIM3 via Coordinator...")
+Send({ Target = P.COORDINATOR, Action = "MintTIM3", Tags = { Amount = "0.01" } })
 
 -- The coordinator will ask Lock Manager to lock collateral.
 -- With the transfer-based fix, user must transfer USDA to Lock Manager.
 
 -- 4) Transfer 5 USDA → Lock Manager (triggers Credit-Notice)
-log("Transferring 5 Mock USDA to Lock Manager to satisfy collateral...")
-Send({ Target = P.MOCK_USDA, Action = "Transfer", Tags = { Recipient = P.LOCK_MANAGER, Amount = "5" } })
+log("Transferring 0.01 Mock USDA to Lock Manager to satisfy collateral...")
+Send({ Target = P.MOCK_USDA, Action = "Transfer", Tags = { Recipient = P.LOCK_MANAGER, Amount = "0.01" } })
 
 -- 5) Query TIM3 balance for this session
 log("Querying TIM3 balance for this session...")
