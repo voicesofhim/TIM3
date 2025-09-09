@@ -332,3 +332,12 @@ If this conversation ends, a new Claude can continue by:
 ---
 
 **🎉 Ready to continue building the TIM3 Coordinator process!**
+
+## 2025-09-09 — E2E Demo Update (0.01 deposit-based)
+
+- The end-to-end verifier now uses a small demo amount (0.01) and the deposit-based path:
+  - Configures `AllowedUSDAProcess` on the Coordinator so Credit-Notice can initiate mint
+  - Sets Token Manager `MinMintAmount=0.01` so small mints succeed
+  - Transfers 0.01 Mock USDA to the Coordinator (Credit-Notice) instead of calling `MintTIM3`
+- Rationale: Coordinator’s `minMintAmount` default is 1; deposit-based flow cleanly demonstrates tiny amounts without changing source defaults.
+- File: `contracts/scripts/verify-e2e.lua`
