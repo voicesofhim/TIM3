@@ -65,4 +65,4 @@ fi
 
 echo ""
 echo "To run the detailed Lua verification:"
-echo "aos --load verify-test-processes.lua"
+echo "aos --load contracts/verify/verify-test-processes.lua"
