@@ -1,3 +1,22 @@
+
+## Deploying with .load files
+
+- Open AOS and create/select a process.
+- Run one of the loads under `contracts/loads/`:
+  - `.load contracts/loads/mock-usda.load`
+  - `.load contracts/loads/lock-manager.load`
+  - `.load contracts/loads/token-manager.load`
+  - `.load contracts/loads/state-manager.load`
+  - `.load contracts/loads/coordinator.load`
+- Copy the printed PIDs and update them in:
+  - `contracts/scripts/configure-integration.lua`
+  - `contracts/scripts/verify-e2e.lua`
+  - `contracts/verify/verify-processes.sh`
+
+Then:
+- `./contracts/verify/verify-processes.sh` to confirm reachability
+- `aos --load contracts/scripts/verify-e2e.lua` for the end-to-end flow
+
 # TIM3 - Collateralized Token on Arweave AO
 
 TIM3 is a 1:1 USDA-backed token built on Arweave's AO network. Users lock USDA as collateral and receive TIM3 tokens that maintain their value through full backing.
