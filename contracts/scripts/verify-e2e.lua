@@ -133,8 +133,12 @@ Send({ Target = P.COORDINATOR, Action = "Configure", Tags = { ConfigType = "Mock
 Send({ Target = P.COORDINATOR, Action = "Configure", Tags = { ConfigType = "StateManagerProcess", Value = P.STATE_MANAGER } })
 Send({ Target = P.COORDINATOR, Action = "Configure", Tags = { ConfigType = "LockManagerProcess",  Value = P.LOCK_MANAGER } })
 Send({ Target = P.COORDINATOR, Action = "Configure", Tags = { ConfigType = "TokenManagerProcess", Value = P.TOKEN_MANAGER } })
+
+-- Lower Token Manager minimum mint amount for small demo
+Send({ Target = P.TOKEN_MANAGER, Action = "Configure", Tags = { ConfigType = "MinMintAmount", Value = "0.01" } })
+
 -- Allow deposit-mint via Credit-Notice path (optional)
-Send({ Target = P.COORDINATOR, Action = "Configure", Tags = { ConfigType = "AllowedUsdaProcess", Value = P.MOCK_USDA } })
+Send({ Target = P.COORDINATOR, Action = "Configure", Tags = { ConfigType = "AllowedUSDAProcess", Value = P.MOCK_USDA } })
 
 Send({ Target = P.STATE_MANAGER, Action = "Configure", Tags = { ConfigType = "CoordinatorProcess", Value = P.COORDINATOR } })
 Send({ Target = P.STATE_MANAGER, Action = "Configure", Tags = { ConfigType = "LockManagerProcess", Value = P.LOCK_MANAGER } })
@@ -156,15 +160,15 @@ log("Minting 0.01 Mock USDA to this session (" .. ao.id .. ")...")
 Send({ Target = P.MOCK_USDA, Action = "Mint", Tags = { Amount = "0.01" } })
 
 -- 3) Request mint of 5 TIM3 via coordinator
-log("Requesting mint of 0.01 TIM3 via Coordinator...")
-Send({ Target = P.COORDINATOR, Action = "MintTIM3", Tags = { Amount = "0.01" } })
+log("Deposit-based mint: 0.01 via Coordinator Credit-Notice...")
+-- (Deposit path) No explicit MintTIM3; Credit-Notice will trigger mint
 
 -- The coordinator will ask Lock Manager to lock collateral.
 -- With the transfer-based fix, user must transfer USDA to Lock Manager.
 
 -- 4) Transfer 5 USDA → Lock Manager (triggers Credit-Notice)
-log("Transferring 0.01 Mock USDA to Lock Manager to satisfy collateral...")
-Send({ Target = P.MOCK_USDA, Action = "Transfer", Tags = { Recipient = P.LOCK_MANAGER, Amount = "0.01" } })
+log("Transferring 0.01 Mock USDA to Coordinator (deposit-based mint)...")
+Send({ Target = P.MOCK_USDA, Action = "Transfer", Tags = { Recipient = P.COORDINATOR, Amount = "0.01" } })
 
 -- 5) Query TIM3 balance for this session
 log("Querying TIM3 balance for this session...")
