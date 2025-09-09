@@ -1,5 +1,5 @@
 json = require('json')
-.load /Users/ryanjames/Documents/CRØSS/W3B/S3ARCH/apps/tim3/ao/coordinator/build/process.lua
+.load ao/coordinator/build/process.lua
 
 wander: 2fSKy8T_MWCk4RRBtZwGL8TECg9wDCuQD90Y2IeyRQg
 

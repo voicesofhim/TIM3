@@ -1,0 +1,5 @@
+-- Mock USDA (development token)
+-- In AOS: create/select a process, then run:
+.load ao/mock-usda/build/process.lua
+
+print('Mock USDA loaded. Use Mint/Transfer/Balance for testing.')

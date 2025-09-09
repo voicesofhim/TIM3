@@ -1,0 +1,5 @@
+-- TIM3 Lock Manager
+-- In AOS: create/select a process, then run:
+.load ao/lock-manager/build/process.lua
+
+print('Lock Manager loaded. Configure with Coordinator/State/Mock USDA PIDs.')

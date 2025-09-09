@@ -1,0 +1,5 @@
+-- TIM3 Coordinator (Orchestrator)
+-- In AOS: create/select a process, then run:
+.load ao/coordinator/build/process.lua
+
+print('Coordinator loaded. Use Configure messages to set Lock/Token/State/USDA PIDs.')

@@ -1,0 +1,5 @@
+-- TIM3 Token Manager
+-- In AOS: create/select a process, then run:
+.load ao/token-manager/build/process.lua
+
+print('Token Manager loaded. Configure with Coordinator/State/Lock PIDs.')
