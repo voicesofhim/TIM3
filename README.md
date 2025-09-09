@@ -157,3 +157,21 @@ Notes:
 - Project status and Next Steps: `docs/STATUS.md`
 - Agent handoff protocol: `docs/HANDOFF.md`
 - Current PIDs (TEST/PROD): `docs/PIDs.md`
+
+
+
+## Start Here
+
+- Project status and Next Steps: `docs/STATUS.md`
+- Agent handoff protocol: `docs/HANDOFF.md`
+- Current PIDs (TEST/PROD): `docs/PIDs.md`
+
+## PID Sync Helper
+
+After (re)deploying processes and updating `docs/PIDs.md`, you can sync PIDs into the code with:
+
+```bash
+python3 tools/update_pids.py --env TEST
+```
+
+Then review with `git diff` and commit.
