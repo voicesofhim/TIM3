@@ -150,3 +150,10 @@ What it does:
 Notes:
 - If PIDs change, update them at the top of `contracts/scripts/verify-e2e.lua`.
 - If any step fails, re-run once after ~10s to allow messages to settle.
+
+
+## Start Here
+
+- Project status and Next Steps: `docs/STATUS.md`
+- Agent handoff protocol: `docs/HANDOFF.md`
+- Current PIDs (TEST/PROD): `docs/PIDs.md`

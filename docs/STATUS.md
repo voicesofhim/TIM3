@@ -5,7 +5,6 @@
 - Added verification:
   - `contracts/scripts/verify-e2e.lua` end-to-end USDA → TIM3 demo
   - `contracts/verify/verify-test-processes.lua` inside-AOS health check
-  - `contracts/verify/verify-processes.sh` host reachability helper (optional)
 - Added relative `.load` files under `contracts/loads/*` for redeploy
 - Updated `README.md` with Quick Start, E2E, and deploy instructions
 - Created tags for rollback/reference: `v0-extract`, `pre-reorg`
@@ -13,6 +12,24 @@
 Notes:
 - Core AO build files under `ao/**/build/process.lua` were not modified
 - The transfer-based Lock Manager tweak is only applied at runtime by the E2E script (no persisted change)
+
+## Next Steps (Agent Checklist)
+
+- Redeploy or confirm TEST processes using `.load` files under `contracts/loads/` and record fresh PIDs in `docs/PIDs.md`.
+- Update PIDs in code paths that use them:
+  - `contracts/scripts/configure-integration.lua` (PROCESS_IDS)
+  - `contracts/scripts/verify-e2e.lua` (P table)
+  - `contracts/verify/verify-test-processes.lua` (TEST_PROCESSES)
+- Verify inside AOS:
+  - `aos --load contracts/verify/verify-test-processes.lua`
+  - `aos --load contracts/scripts/verify-e2e.lua`
+- Decide lock flow for production:
+  - Keep the runtime transfer-based fix (Eval) or formalize into Lock Manager source.
+- Document and handoff:
+  - Update this `docs/STATUS.md` with “What works now” and any caveats
+  - Add a bullet to `docs/IMPLEMENTATION_LOG.md` summarizing changes + commit hash
+  - Open a GitHub issue if any TODO remains for the next agent
+
 
 # TIM3 Project Status Report
 
